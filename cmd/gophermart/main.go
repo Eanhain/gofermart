@@ -1,23 +1,27 @@
 package main
 
 import (
-	"log"
-
 	flags "github.com/Eanhain/gofermart/internal/flags"
+	logger "github.com/Eanhain/gofermart/internal/logger"
 )
 
-func flagsInitalize() error {
+func flagsInitalize(log *logger.Logger) error {
 	flagInstance, err := flags.InitialFlags()
 	if err != nil {
-		log.Println(err)
+		log.Warnln(err)
 	}
 	flagInstance.Parse()
-	log.Println(flagInstance)
+	log.Infoln(flagInstance)
 	return nil
 }
 
 func main() {
-	if err := flagsInitalize(); err != nil {
-		log.Println(err)
+	log := logger.InitialLogger()
+
+	defer log.Sync()
+
+	if err := flagsInitalize(log); err != nil {
+		log.Warnln(err)
 	}
+
 }
