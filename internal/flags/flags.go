@@ -22,3 +22,11 @@ func InitialFlags() (ServerFlags, error) {
 	}
 	return ServerFlags{}, nil
 }
+
+func (sf ServerFlags) GetHost() string {
+	return sf.Host
+}
+
+func (sf ServerFlags) GetPort() string {
+	return sf.Port
+}
