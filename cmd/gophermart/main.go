@@ -34,7 +34,7 @@ func main() {
 		log.Warnln(err)
 	}
 
-	r := route.InitialHandler(log, flagsIn.GetHost(), flagsIn.GetPort())
+	r := route.InitialApp(log, flagsIn.GetHost(), flagsIn.GetPort())
 
 	if err := r.StartServer(ctx); err != nil {
 		log.Errorln("cannot start server", err)

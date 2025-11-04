@@ -12,19 +12,28 @@ type Logger interface {
 	Infoln(args ...any)
 }
 
-type route struct {
+type Service interface {
+}
+
+type app struct {
 	*fiber.App
 	logger Logger
 	server string
 }
 
-func InitialHandler(log Logger, host string, port string) route {
+func InitialApp(log Logger, host string, port string) app {
 	routeFiber := fiber.New()
 	server := fmt.Sprintf("%v:%v", host, port)
-	return route{routeFiber, log, server}
+	return app{routeFiber, log, server}
 }
 
-func (r *route) StartServer(ctx context.Context) error {
+func (r *app) StartServer(ctx context.Context) error {
+	err := r.Listen(r.server)
+	return err
+}
+
+func (r *app) CreateHandlers(ctx context.Context) error {
+	r.Post("/api/user/register")
 	err := r.Listen(r.server)
 	return err
 }
