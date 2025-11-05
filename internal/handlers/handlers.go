@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -21,9 +20,8 @@ type app struct {
 	server string
 }
 
-func InitialApp(log Logger, host string, port string) app {
+func InitialApp(log Logger, server string) app {
 	routeFiber := fiber.New()
-	server := fmt.Sprintf("%v:%v", host, port)
 	return app{routeFiber, log, server}
 }
 

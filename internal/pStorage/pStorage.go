@@ -2,9 +2,11 @@ package pStorage
 
 import (
 	dto "github.com/Eanhain/gofermart/internal/api"
+	pgxpool "github.com/jackc/pgx/v5/pgxpool"
 )
 
 type PersistStorage struct {
+	pgxpool.Pool
 }
 
 func InitialPersistStorage() *PersistStorage {
@@ -30,3 +32,5 @@ func (ps *PersistStorage) MultipleDel(user dto.UserArray) error {
 func (ps *PersistStorage) List() ([]dto.UserArray, error) {
 	return []dto.UserArray{}, nil
 }
+
+func (ps *PersistStorage) Connect()

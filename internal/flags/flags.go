@@ -30,3 +30,7 @@ func (sf ServerFlags) GetHost() string {
 func (sf ServerFlags) GetPort() string {
 	return sf.Port
 }
+
+func (sf ServerFlags) GetAddr() string {
+	return fmt.Sprintf("%v:%v", sf.Host, sf.Port)
+}
