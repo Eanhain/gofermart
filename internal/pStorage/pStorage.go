@@ -36,15 +36,18 @@ CREATE TABLE IF NOT EXISTS balance (
 `
 
 type PersistStorage struct {
-	pgxpool.Pool
+	*pgxpool.Pool
 	connString string
 }
 
-func ConnectToPersistStorage(ctx context.Context, addr string) (*PersistStorage, error) {
-	connString := fmt.Sprintf("postgres://%v:%v@localhost:5432/gofemart")
+func ConnectToPersistStorage(ctx context.Context, user string, passw string, host string, port string, schema string) (*PersistStorage, error) {
+	connString := fmt.Sprintf("postgres://%v:%v@%v:%v/%v", user, passw, host, port, schema)
 	pgxPool, err := pgxpool.New(ctx, connString)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to connect db %w", err)
+	}
+	if err := pgxPool.Ping(ctx); err != nil {
+		return nil, fmt.Errorf("ping doesn't work %w", err)
 	}
 	return &PersistStorage{pgxPool, connString}, nil
 }
