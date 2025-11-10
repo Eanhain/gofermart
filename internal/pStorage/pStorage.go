@@ -3,6 +3,7 @@ package pStorage
 import (
 	"context"
 	"fmt"
+	"log"
 
 	dto "github.com/Eanhain/gofermart/internal/api"
 	pgx "github.com/jackc/pgx/v5"
@@ -53,13 +54,13 @@ func ConnectToPersistStorage(ctx context.Context, log Logger, user string, passw
 		return nil, fmt.Errorf("ping doesn't work %w", err)
 	}
 	PersistStorageInstance := &PersistStorage{pgxPool}
-	if err := PersistStorageInstance.InitSchema(log, ctx); err != nil {
+	if err := PersistStorageInstance.InitSchema(ctx, log); err != nil {
 		return nil, fmt.Errorf("can't initialize schema, %w", err)
 	}
 	return PersistStorageInstance, nil
 }
 
-func (ps *PersistStorage) InitSchema(log Logger, ctx context.Context) error {
+func (ps *PersistStorage) InitSchema(ctx context.Context, log Logger) error {
 	ddls := []string{ddlUsers, ddlOrders, ddlBalance}
 	tx, err := ps.BeginTx(ctx, pgx.TxOptions{})
 	defer tx.Rollback(ctx)
@@ -80,26 +81,50 @@ func (ps *PersistStorage) InitSchema(log Logger, ctx context.Context) error {
 	return nil
 }
 
-func (ps *PersistStorage) Add(user dto.User) error {
+func (ps *PersistStorage) RegisterUser(ctx context.Context, users dto.UserArray) error {
+	tx, err := ps.BeginTx(ctx, pgx.TxOptions{})
+	defer tx.Rollback(ctx)
+	if err != nil {
+		return fmt.Errorf("can't register user (transaction start) %w", err)
+	}
+	prepareState, err := tx.Prepare(ctx, "Add Users (batch)", `
+		INSERT INTO users (username, hash) VALUES ($1, $2)`)
+	if err != nil {
+		return fmt.Errorf("can't prepare statement %w", err)
+	}
+
+	batch := pgx.Batch{}
+
+	for _, user := range users {
+		batch.Queue(prepareState.Name, user.Login, user.Hash)
+	}
+
+	res := tx.SendBatch(ctx, &batch)
+
+	ct, err := res.Exec()
+	if err != nil {
+		return fmt.Errorf("error with sending batch data %w", err)
+	}
+	log.Println("batch data was sending, rows:", ct.RowsAffected())
+
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (ps *PersistStorage) Del(user dto.User) error {
-	return nil
-}
+func (ps *PersistStorage) CheckUserPermissions(ctx context.Context, untrustedUser dto.User) (dto.User, error) {
+	var orUser dto.User
+	sql := `
+		SELECT * FROM users
+		WHERE USERNAME = "$1"
+	`
+	row := ps.QueryRow(ctx, sql, untrustedUser.Login)
 
-func (ps *PersistStorage) MultipleAdd(user dto.UserArray) error {
-	return nil
-}
+	if err := row.Scan(&orUser); err != nil {
+		return dto.User{}, err
+	}
 
-func (ps *PersistStorage) MultipleDel(user dto.UserArray) error {
-	return nil
-}
-
-func (ps *PersistStorage) List() ([]dto.UserArray, error) {
-	return []dto.UserArray{}, nil
-}
-
-func (ps *PersistStorage) Connect() {
-
+	return orUser, nil
 }
