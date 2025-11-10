@@ -23,13 +23,7 @@ type User struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
 	Hash     string
-	Orders   string
-	Amount   Amount
 }
-
-// структура на возврат заказов (отправка с сервера)
-// GET /api/user/orders
-type OrdersDesc []OrderDesc
 
 // Взаимодействие с системой расчёта начислений баллов лояльности
 // Для взаимодействия с системой доступен один хендлер:
@@ -51,6 +45,10 @@ type Amount struct {
 // Получение информации о выводе средств
 // GET /api/user/withdrawals.
 type Withdrawns []Withdrawn
+
+// структура на возврат заказов (отправка с сервера)
+// GET /api/user/orders
+type OrdersDesc []OrderDesc
 
 //easyjson:json
 type UserArray []User

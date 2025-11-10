@@ -115,7 +115,7 @@ func easyjson56de76c1DecodeGithubComEanhainGofermartInternalApi1(in *jlexer.Lexe
 		in.Delim('[')
 		if *out == nil {
 			if !in.IsDelim(']') {
-				*out = make(UserArray, 0, 0)
+				*out = make(UserArray, 0, 1)
 			} else {
 				*out = UserArray{}
 			}
@@ -208,18 +208,6 @@ func easyjson56de76c1DecodeGithubComEanhainGofermartInternalApi2(in *jlexer.Lexe
 			} else {
 				out.Hash = string(in.String())
 			}
-		case "Orders":
-			if in.IsNull() {
-				in.Skip()
-			} else {
-				out.Orders = string(in.String())
-			}
-		case "Amount":
-			if in.IsNull() {
-				in.Skip()
-			} else {
-				(out.Amount).UnmarshalEasyJSON(in)
-			}
 		default:
 			in.SkipRecursive()
 		}
@@ -248,16 +236,6 @@ func easyjson56de76c1EncodeGithubComEanhainGofermartInternalApi2(out *jwriter.Wr
 		const prefix string = ",\"Hash\":"
 		out.RawString(prefix)
 		out.String(string(in.Hash))
-	}
-	{
-		const prefix string = ",\"Orders\":"
-		out.RawString(prefix)
-		out.String(string(in.Orders))
-	}
-	{
-		const prefix string = ",\"Amount\":"
-		out.RawString(prefix)
-		(in.Amount).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }
