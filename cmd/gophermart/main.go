@@ -6,7 +6,7 @@ import (
 	flags "github.com/Eanhain/gofermart/internal/flags"
 	route "github.com/Eanhain/gofermart/internal/handlers"
 	logger "github.com/Eanhain/gofermart/internal/logger"
-	// store "github.com/Eanhain/gofermart/internal/pStorage"
+	store "github.com/Eanhain/gofermart/internal/pStorage"
 )
 
 func flagsInitalize(log *logger.Logger) (flags.ServerFlags, error) {
@@ -36,6 +36,18 @@ func main() {
 	}
 
 	r := route.InitialApp(log, flagsIn.GetAddr())
+
+	pStore, err := store.ConnectToPersistStorage(ctx,
+		log,
+		flagsIn.PostgresUser,
+		flagsIn.PostgresPassword,
+		flagsIn.PostgresHost,
+		flagsIn.PostgresPort,
+		flagsIn.PostgresSchema)
+	if err != nil {
+		log.Errorln("can't create pStore instance", err)
+	}
+	defer pStore.Close()
 
 	if err := r.StartServer(ctx); err != nil {
 		log.Errorln("cannot start server", err)

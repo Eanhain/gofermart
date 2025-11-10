@@ -10,11 +10,11 @@ import (
 type ServerFlags struct {
 	Host             string `short:"h" help:"Server hostname." default:"localhost" env:"HOST"`
 	Port             string `short:"p" help:"Server port." default:"8080" env:"PORT"`
-	PostgresHost     string `short:"phost" help:"Postgres connection host." default:"127.0.0.1" env:"POSTGRES_HOST"`
-	PostgresPort     string `short:"pport" help:"Postgres connection port." default:"5432" env:"POSTGRES_PORT"`
-	PostgresUser     string `short:"puser" help:"Postgres connection user." default:"db_user" env:"POSTGRES_USER"`
-	PostgresPassword string `short:"ppass" help:"Postgres connection password." default:"s3cret" env:"POSTGRES_PASSWORD"`
-	PostgresSchema   string `short:"pschema" help:"Postgres connection schema." default:"gofemart" env:"POSTGRES_SCHEMA"`
+	PostgresHost     string `long:"phost" help:"Postgres connection host." default:"127.0.0.1" env:"POSTGRES_HOST"`
+	PostgresPort     string `long:"pport" help:"Postgres connection port." default:"5432" env:"POSTGRES_PORT"`
+	PostgresUser     string `long:"puser" help:"Postgres connection user." default:"db_user" env:"POSTGRES_USER"`
+	PostgresPassword string `long:"ppass" help:"Postgres connection password." default:"s3cret" env:"POSTGRES_PASSWORD"`
+	PostgresSchema   string `long:"pschema" help:"Postgres connection schema." default:"gofemart" env:"POSTGRES_SCHEMA"`
 }
 
 func (sf *ServerFlags) Parse() {
