@@ -37,11 +37,16 @@ func main() {
 
 	r := route.InitialApp(log, flagsIn.GetAddr())
 
-	pStore, err := store.ConnectToPersistStorage(ctx,
+	pStore, err := store.InitialPersistStorage(ctx,
 		log,
 		flagsIn.GetDBConnStr())
+
 	if err != nil {
 		log.Errorln("can't create pStore instance", err)
+	}
+
+	if err := pStore.InitSchema(ctx, log); err != nil {
+		log.Errorln("can't complete ddls", err)
 	}
 	defer pStore.Close()
 

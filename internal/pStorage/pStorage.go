@@ -15,6 +15,13 @@ type Logger interface {
 	Infoln(args ...any)
 }
 
+type PgxIface interface {
+	Begin(context.Context) (pgx.Tx, error)
+	BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
+	QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row
+	Close()
+}
+
 const (
 	ddlUsers = ` 
 		CREATE TABLE IF NOT EXISTS users (
@@ -41,21 +48,15 @@ const (
 )
 
 type PersistStorage struct {
-	*pgxpool.Pool
+	PgxIface
 }
 
-func ConnectToPersistStorage(ctx context.Context, log Logger, connString string) (*PersistStorage, error) {
+func InitialPersistStorage(ctx context.Context, log Logger, connString string) (*PersistStorage, error) {
 	pgxPool, err := pgxpool.New(ctx, connString)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect db %w", err)
 	}
-	if err := pgxPool.Ping(ctx); err != nil {
-		return nil, fmt.Errorf("ping doesn't work %w", err)
-	}
 	PersistStorageInstance := &PersistStorage{pgxPool}
-	if err := PersistStorageInstance.InitSchema(ctx, log); err != nil {
-		return nil, fmt.Errorf("can't initialize schema, %w", err)
-	}
 	return PersistStorageInstance, nil
 }
 

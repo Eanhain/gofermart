@@ -34,5 +34,6 @@ require (
 require (
 	github.com/gofiber/fiber/v2 v2.52.9
 	github.com/jackc/pgx/v5 v5.7.6
+	github.com/pashagolub/pgxmock/v4 v4.9.0
 	go.uber.org/multierr v1.10.0 // indirect
 )
