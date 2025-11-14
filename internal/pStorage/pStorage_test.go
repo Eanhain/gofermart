@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	logger "github.com/Eanhain/gofermart/internal/logger"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/pashagolub/pgxmock/v4"
 )
 
@@ -27,7 +28,7 @@ func TestConnectToPersistStorage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mock, err := pgxmock.NewPool()
+			mock, err := pgxmock.NewPool(pgxmock.QueryMatcherOption(pgxmock.QueryMatcherEqual))
 			if err != nil {
 				t.Fatalf("Cannot create mock %v", err)
 			}
@@ -36,7 +37,7 @@ func TestConnectToPersistStorage(t *testing.T) {
 			mock.ExpectBegin()
 			ddls := []string{ddlUsers, ddlOrders, ddlBalance}
 			for _, ddl := range ddls {
-				mock.ExpectExec(ddl)
+				mock.ExpectExec(ddl).WillReturnResult(pgconn.NewCommandTag("CREATE TABLE"))
 			}
 			mock.ExpectCommit()
 			if err = psInst.InitSchema(tt.ctx, tt.log); err != tt.wantErr {
