@@ -2,19 +2,15 @@ package flags
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/alecthomas/kong"
 	"github.com/joho/godotenv"
 )
 
 type ServerFlags struct {
-	Host             string `short:"h" help:"Server hostname." default:"localhost" env:"HOST"`
-	Port             string `short:"p" help:"Server port." default:"8080" env:"PORT"`
-	PostgresHost     string `long:"phost" help:"Postgres connection host." default:"127.0.0.1" env:"POSTGRES_HOST"`
-	PostgresPort     string `long:"pport" help:"Postgres connection port." default:"5432" env:"POSTGRES_PORT"`
-	PostgresUser     string `long:"puser" help:"Postgres connection user." default:"db_user" env:"POSTGRES_USER"`
-	PostgresPassword string `long:"ppass" help:"Postgres connection password." default:"s3cret" env:"POSTGRES_PASSWORD"`
-	PostgresSchema   string `long:"pschema" help:"Postgres connection schema." default:"gofemart" env:"POSTGRES_SCHEMA"`
+	Addr   string `short:"a" help:"Server addr" default:"localhost:8080" env:"RUN_ADDRESS"`
+	DdAddr string `short:"d" help:"Postgres connection addr" default:"postgres://db_user:s3cret@127.0.0.1/gofemart" env:"DATABASE_URI"`
 }
 
 func (sf *ServerFlags) Parse() {
@@ -29,13 +25,19 @@ func InitialFlags() (ServerFlags, error) {
 }
 
 func (sf ServerFlags) GetHost() string {
-	return sf.Host
+	splitStr := strings.Split(sf.Addr, ":")
+	return splitStr[0]
 }
 
 func (sf ServerFlags) GetPort() string {
-	return sf.Port
+	splitStr := strings.Split(sf.Addr, ":")
+	return splitStr[1]
 }
 
 func (sf ServerFlags) GetAddr() string {
-	return fmt.Sprintf("%v:%v", sf.Host, sf.Port)
+	return sf.Addr
+}
+
+func (sf ServerFlags) GetDBConnStr() string {
+	return sf.DdAddr
 }

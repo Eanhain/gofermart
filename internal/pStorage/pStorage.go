@@ -44,8 +44,7 @@ type PersistStorage struct {
 	*pgxpool.Pool
 }
 
-func ConnectToPersistStorage(ctx context.Context, log Logger, user string, passw string, host string, port string, schema string) (*PersistStorage, error) {
-	connString := fmt.Sprintf("postgres://%v:%v@%v:%v/%v", user, passw, host, port, schema)
+func ConnectToPersistStorage(ctx context.Context, log Logger, connString string) (*PersistStorage, error) {
 	pgxPool, err := pgxpool.New(ctx, connString)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect db %w", err)

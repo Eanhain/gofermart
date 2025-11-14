@@ -39,11 +39,7 @@ func main() {
 
 	pStore, err := store.ConnectToPersistStorage(ctx,
 		log,
-		flagsIn.PostgresUser,
-		flagsIn.PostgresPassword,
-		flagsIn.PostgresHost,
-		flagsIn.PostgresPort,
-		flagsIn.PostgresSchema)
+		flagsIn.GetDBConnStr())
 	if err != nil {
 		log.Errorln("can't create pStore instance", err)
 	}
