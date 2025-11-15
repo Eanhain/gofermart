@@ -11,40 +11,40 @@ import (
 // Запрос на списание средств (прием на сервер)
 // POST /api/user/balance/withdraw
 type Withdrawn struct {
-	Order string  `json:"order"`
-	Sum   float64 `json:"sum"`
+	Order string  `json:"order" db:"order"`
+	Sum   float64 `json:"sum" db:"sum"`
 	// на входе его нет, только на выходе
-	Processed_at time.Time `json:"processed_at"`
+	Processed_at time.Time `json:"processed_at" db:"processed_at"`
 }
 
 // Аутентификация пользователя (прием на сервер)
 // POST /api/user/login.
 type UserInput struct {
-	Login    string `json:"login"`
-	Password string `json:"password"`
-	Hash     string
+	Login    string `json:"login" db:"login"`
+	Password string `json:"password" db:"password"`
+	Hash     string `db:"hash"`
 }
 
 type User struct {
-	Login string `json:"login"`
-	Hash  string `json:"hash"`
+	Login string `json:"login" db:"username"`
+	Hash  string `json:"hash" db:"hash"`
 }
 
 // Взаимодействие с системой расчёта начислений баллов лояльности
 // Для взаимодействия с системой доступен один хендлер:
 // GET /api/orders/{number} — получение информации о расчёте начислений баллов лояльности.
 type OrderDesc struct {
-	Number      string    `json:"number"`
-	Status      string    `json:"status"`
-	Accrual     float64   `json:"accural,omitempty"`
-	Uploaded_at time.Time `json:"uploaded_at"`
+	Number      string    `json:"number" db:"number"`
+	Status      string    `json:"status" db:"status"`
+	Accrual     float64   `json:"accural,omitempty" db:"accural"`
+	Uploaded_at time.Time `json:"uploaded_at" db:"uploaded_at"`
 }
 
 // Получение текущего баланса пользователя (отправка с сервера)
 // GET /api/user/balance
 type Amount struct {
-	Current   float64 `json:"current"`
-	Withdrawn float64 `json:"withdrawn"`
+	Current   float64 `json:"current" db:"balance"`
+	Withdrawn float64 `json:"withdrawn" db:"withdrawn"`
 }
 
 // Получение информации о выводе средств
@@ -57,9 +57,3 @@ type OrdersDesc []OrderDesc
 
 //easyjson:json
 type UserArray []User
-
-// func ToDTO(username string, password string) User {
-// 	return User{
-// 		Login: username,
-// 		Hash:  password}
-// }
