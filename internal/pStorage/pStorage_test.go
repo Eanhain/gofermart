@@ -33,7 +33,7 @@ func TestConnectToPersistStorage(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Cannot create mock %v", err)
 			}
-			psInst := PersistStorage{mock}
+			psInst := PersistStorage{mock, tt.log}
 			defer psInst.Close()
 			mock.ExpectBegin()
 			ddls := []string{ddlUsers, ddlOrders, ddlBalance}
@@ -74,15 +74,13 @@ func TestGetUserFromDB(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Cannot create mock %v", err)
 			}
-			psInst := PersistStorage{mock}
+			psInst := PersistStorage{mock, tt.log}
 
 			defer psInst.Close()
 			rows := pgxmock.NewRows([]string{"username", "hash"}).AddRow("test", "hash2")
 			mock.ExpectQuery(selectUser).WithArgs(tt.user.Login).WillReturnRows(rows)
-			if unt, trust, err := psInst.GetUserFromDB(tt.ctx, tt.user); err != tt.wantErr {
+			if _, _, err := psInst.GetUserFromDB(tt.ctx, tt.user); err != tt.wantErr {
 				t.Fatalf("GetUserFromDB() error = %v, wantErr %v", err, tt.wantErr)
-			} else {
-				t.Log("Input user:", unt, "Output user:", trust)
 			}
 		})
 	}

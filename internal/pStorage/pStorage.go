@@ -53,6 +53,7 @@ const (
 
 type PersistStorage struct {
 	PgxIface
+	log Logger
 }
 
 func InitialPersistStorage(ctx context.Context, log Logger, connString string) (*PersistStorage, error) {
@@ -60,7 +61,7 @@ func InitialPersistStorage(ctx context.Context, log Logger, connString string) (
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect db %w", err)
 	}
-	PersistStorageInstance := &PersistStorage{pgxPool}
+	PersistStorageInstance := &PersistStorage{pgxPool, log}
 	return PersistStorageInstance, nil
 }
 
@@ -126,5 +127,7 @@ func (ps *PersistStorage) GetUserFromDB(ctx context.Context, untrustedUser dto.U
 	if err := row.Scan(&orUser.Login, &orUser.Hash); err != nil {
 		return dto.User{}, dto.User{}, err
 	}
+
+	ps.log.Infoln("Get user from db:", orUser.Login)
 	return untrustedUser, orUser, nil
 }
