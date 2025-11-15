@@ -3,7 +3,6 @@ package pStorage
 import (
 	"context"
 	"fmt"
-	"log"
 
 	dto "github.com/Eanhain/gofermart/internal/api"
 	pgx "github.com/jackc/pgx/v5"
@@ -21,6 +20,19 @@ type PgxIface interface {
 	QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row
 	Close()
 }
+
+type InsertUserStruct struct {
+	DML  string
+	Name string
+}
+
+var (
+	InsertUser = InsertUserStruct{
+		Name: "Add Users (batch)",
+		DML: ` INSERT INTO users (username, hash) 
+		VALUES ($1, $2)`,
+	}
+)
 
 const (
 	ddlUsers = ` 
@@ -79,7 +91,7 @@ func (ps *PersistStorage) InitSchema(ctx context.Context, log Logger) error {
 			return fmt.Errorf("couldn't parse DDL output %w", err)
 		}
 	}
-	log.Infoln("tables created")
+	ps.log.Infoln("tables created")
 	if err := tx.Commit(ctx); err != nil {
 		return err
 	}
@@ -92,25 +104,26 @@ func (ps *PersistStorage) RegisterUser(ctx context.Context, users dto.UserArray)
 	if err != nil {
 		return fmt.Errorf("can't register user (transaction start) %w", err)
 	}
-	prepareState, err := tx.Prepare(ctx, "Add Users (batch)", `
-		INSERT INTO users (username, hash) VALUES ($1, $2)`)
+	prepareState, err := tx.Prepare(ctx, InsertUser.Name, InsertUser.DML)
 	if err != nil {
 		return fmt.Errorf("can't prepare statement %w", err)
 	}
 
-	batch := pgx.Batch{}
+	batch := &pgx.Batch{}
 
 	for _, user := range users {
 		batch.Queue(prepareState.Name, user.Login, user.Hash)
 	}
 
-	res := tx.SendBatch(ctx, &batch)
-
-	ct, err := res.Exec()
-	if err != nil {
-		return fmt.Errorf("error with sending batch data %w", err)
+	res := tx.SendBatch(ctx, batch)
+	defer res.Close()
+	for i := 0; i < len(users); i++ {
+		ct, err := res.Exec()
+		if err != nil {
+			return fmt.Errorf("error with sending batch data %w, with user %v", err, users[i])
+		}
+		ps.log.Infoln("batch data was sending, rows:", ct.RowsAffected(), "for user:", users[i].Login)
 	}
-	log.Println("batch data was sending, rows:", ct.RowsAffected())
 
 	if err := tx.Commit(ctx); err != nil {
 		return err
