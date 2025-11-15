@@ -48,6 +48,7 @@ func main() {
 	if err := pStore.InitSchema(ctx, log); err != nil {
 		log.Errorln("can't complete ddls", err)
 	}
+
 	defer pStore.Close()
 
 	if err := r.StartServer(ctx); err != nil {

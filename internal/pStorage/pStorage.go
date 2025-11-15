@@ -45,6 +45,10 @@ const (
 			BALANCE 	REAL NOT NULL,
 			UPLOADED_AT TIMESTAMPTZ DEFAULT now()
 		)`
+	selectUser = `
+		SELECT * FROM users
+		WHERE USERNAME = $1
+	`
 )
 
 type PersistStorage struct {
@@ -114,17 +118,13 @@ func (ps *PersistStorage) RegisterUser(ctx context.Context, users dto.UserArray)
 	return nil
 }
 
-func (ps *PersistStorage) CheckUserPermissions(ctx context.Context, untrustedUser dto.User) (dto.User, error) {
+func (ps *PersistStorage) GetUserFromDB(ctx context.Context, untrustedUser dto.User) (dto.User, dto.User, error) {
 	var orUser dto.User
-	sql := `
-		SELECT * FROM users
-		WHERE USERNAME = "$1"
-	`
-	row := ps.QueryRow(ctx, sql, untrustedUser.Login)
 
-	if err := row.Scan(&orUser); err != nil {
-		return dto.User{}, err
+	row := ps.QueryRow(ctx, selectUser, untrustedUser.Login)
+
+	if err := row.Scan(&orUser.Login, &orUser.Hash); err != nil {
+		return dto.User{}, dto.User{}, err
 	}
-
-	return orUser, nil
+	return untrustedUser, orUser, nil
 }

@@ -19,10 +19,15 @@ type Withdrawn struct {
 
 // Аутентификация пользователя (прием на сервер)
 // POST /api/user/login.
-type User struct {
+type UserInput struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
 	Hash     string
+}
+
+type User struct {
+	Login string `json:"login"`
+	Hash  string `json:"hash"`
 }
 
 // Взаимодействие с системой расчёта начислений баллов лояльности
