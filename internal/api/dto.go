@@ -22,7 +22,6 @@ type Withdrawn struct {
 type UserInput struct {
 	Login    string `json:"login" db:"login"`
 	Password string `json:"password" db:"password"`
-	Hash     string `db:"hash"`
 }
 
 type User struct {

@@ -1,10 +1,11 @@
-package pStorage
+package postgres
 
 import (
 	"context"
 	"testing"
 
 	dto "github.com/Eanhain/gofermart/internal/api"
+	domain "github.com/Eanhain/gofermart/internal/domain"
 	logger "github.com/Eanhain/gofermart/internal/logger"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -12,13 +13,12 @@ import (
 )
 
 // func Test
-
 func TestConnectToPersistStorage(t *testing.T) {
 	logger := logger.InitialLogger()
 	tests := []struct {
 		name    string
 		ctx     context.Context
-		log     Logger
+		log     domain.Logger
 		wantErr error
 	}{
 		{
@@ -49,12 +49,12 @@ func TestConnectToPersistStorage(t *testing.T) {
 	}
 }
 
-func TestGetUserFromDB(t *testing.T) {
+func TestCheckUser(t *testing.T) {
 	logger := logger.InitialLogger()
 	tests := []struct {
 		name    string
 		ctx     context.Context
-		log     Logger
+		log     domain.Logger
 		user    dto.User
 		wantErr error
 	}{
@@ -80,8 +80,8 @@ func TestGetUserFromDB(t *testing.T) {
 			defer psInst.Close()
 			rows := pgxmock.NewRows([]string{"username", "hash"}).AddRow("test", "hash2")
 			mock.ExpectQuery(selectUser).WithArgs(tt.user.Login).WillReturnRows(rows)
-			if _, _, err := psInst.GetUserFromDB(tt.ctx, tt.user); err != tt.wantErr {
-				t.Fatalf("GetUserFromDB() error = %v, wantErr %v", err, tt.wantErr)
+			if _, err := psInst.CheckUser(tt.ctx, tt.user); err != tt.wantErr {
+				t.Fatalf("CheckUser() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -92,7 +92,7 @@ func TestRegisterUser(t *testing.T) {
 	tests := []struct {
 		name    string
 		ctx     context.Context
-		log     Logger
+		log     domain.Logger
 		users   dto.UserArray
 		wantErr error
 	}{
@@ -134,7 +134,7 @@ func TestRegisterUser(t *testing.T) {
 			defer psInst.Close()
 
 			if err := psInst.RegisterUser(tt.ctx, tt.users); err != tt.wantErr {
-				t.Fatalf("GetUserFromDB() error = %v, wantErr %v", err, tt.wantErr)
+				t.Fatalf("CheckUser() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

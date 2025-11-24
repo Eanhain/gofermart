@@ -132,12 +132,6 @@ func easyjson56de76c1DecodeGithubComEanhainGofermartInternalApi1(in *jlexer.Lexe
 			} else {
 				out.Password = string(in.String())
 			}
-		case "Hash":
-			if in.IsNull() {
-				in.Skip()
-			} else {
-				out.Hash = string(in.String())
-			}
 		default:
 			in.SkipRecursive()
 		}
@@ -161,11 +155,6 @@ func easyjson56de76c1EncodeGithubComEanhainGofermartInternalApi1(out *jwriter.Wr
 		const prefix string = ",\"password\":"
 		out.RawString(prefix)
 		out.String(string(in.Password))
-	}
-	{
-		const prefix string = ",\"Hash\":"
-		out.RawString(prefix)
-		out.String(string(in.Hash))
 	}
 	out.RawByte('}')
 }

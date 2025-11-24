@@ -6,7 +6,9 @@ import (
 	flags "github.com/Eanhain/gofermart/internal/flags"
 	route "github.com/Eanhain/gofermart/internal/handlers"
 	logger "github.com/Eanhain/gofermart/internal/logger"
-	store "github.com/Eanhain/gofermart/internal/pStorage"
+	"github.com/Eanhain/gofermart/internal/service"
+	cache "github.com/Eanhain/gofermart/internal/storage/cache"
+	store "github.com/Eanhain/gofermart/internal/storage/postgres"
 )
 
 func flagsInitalize(log *logger.Logger) (flags.ServerFlags, error) {
@@ -35,21 +37,32 @@ func main() {
 		log.Warnln(err)
 	}
 
-	r := route.InitialApp(log, flagsIn.GetAddr())
-
 	pStore, err := store.InitialPersistStorage(ctx,
 		log,
 		flagsIn.GetDBConnStr())
 
 	if err != nil {
-		log.Errorln("can't create pStore instance", err)
+		log.Errorln("can't create db instance", err)
+	}
+
+	defer pStore.Close()
+
+	cache, err := cache.InitCache(ctx, pStore)
+	if err != nil {
+		log.Errorln("can't create cache instance", err)
+	}
+
+	serv := service.InitialService(&cache)
+
+	if err != nil {
+		log.Errorln("can't create Service instance", err)
 	}
 
 	if err := pStore.InitSchema(ctx, log); err != nil {
 		log.Errorln("can't complete ddls", err)
 	}
 
-	defer pStore.Close()
+	r := route.InitialApp(log, serv, flagsIn.GetAddr())
 
 	if err := r.StartServer(ctx); err != nil {
 		log.Errorln("cannot start server", err)

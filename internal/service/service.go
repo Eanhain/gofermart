@@ -1,23 +1,21 @@
 package service
 
 import (
+	"context"
+
 	dto "github.com/Eanhain/gofermart/internal/api"
+	domain "github.com/Eanhain/gofermart/internal/domain"
 )
 
-type Repository interface {
-	Add(user dto.User)
-	Del(user dto.User)
-	List()
-}
-
 type Service struct {
-	repo Repository
+	c domain.Cache
 }
 
-func InitialService(repo Repository) *Service {
-	return &Service{repo: repo}
+func InitialService(c domain.Cache) *Service {
+	return &Service{c: c}
 }
 
-func (s *Service) AddUser(user dto.User) {
-	s.repo.Add(user)
+func (s *Service) AddUser(ctx context.Context, user dto.UserArray) error {
+	err := s.c.RegisterUser(ctx, user)
+	return err
 }

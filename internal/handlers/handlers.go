@@ -3,24 +3,17 @@ package handlers
 import (
 	"context"
 
+	domain "github.com/Eanhain/gofermart/internal/domain"
 	"github.com/gofiber/fiber/v2"
 )
 
-type Logger interface {
-	Warnln(args ...any)
-	Infoln(args ...any)
-}
-
-type Service interface {
-}
-
 type app struct {
 	*fiber.App
-	logger Logger
+	logger domain.Logger
 	server string
 }
 
-func InitialApp(log Logger, server string) app {
+func InitialApp(log domain.Logger, service domain.Service, server string) app {
 	routeFiber := fiber.New()
 	return app{routeFiber, log, server}
 }

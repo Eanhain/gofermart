@@ -1,18 +1,14 @@
-package pStorage
+package postgres
 
 import (
 	"context"
 	"fmt"
 
 	dto "github.com/Eanhain/gofermart/internal/api"
+	domain "github.com/Eanhain/gofermart/internal/domain"
 	pgx "github.com/jackc/pgx/v5"
 	pgxpool "github.com/jackc/pgx/v5/pgxpool"
 )
-
-type Logger interface {
-	Warnln(args ...any)
-	Infoln(args ...any)
-}
 
 type PgxIface interface {
 	Begin(context.Context) (pgx.Tx, error)
@@ -65,10 +61,10 @@ const (
 
 type PersistStorage struct {
 	PgxIface
-	log Logger
+	log domain.Logger
 }
 
-func InitialPersistStorage(ctx context.Context, log Logger, connString string) (*PersistStorage, error) {
+func InitialPersistStorage(ctx context.Context, log domain.Logger, connString string) (*PersistStorage, error) {
 	pgxPool, err := pgxpool.New(ctx, connString)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect db %w", err)
@@ -77,7 +73,7 @@ func InitialPersistStorage(ctx context.Context, log Logger, connString string) (
 	return PersistStorageInstance, nil
 }
 
-func (ps *PersistStorage) InitSchema(ctx context.Context, log Logger) error {
+func (ps *PersistStorage) InitSchema(ctx context.Context, log domain.Logger) error {
 	ddls := []string{ddlUsers, ddlOrders, ddlBalance}
 	tx, err := ps.BeginTx(ctx, pgx.TxOptions{})
 	defer tx.Rollback(ctx)
@@ -132,15 +128,15 @@ func (ps *PersistStorage) RegisterUser(ctx context.Context, users dto.UserArray)
 	return nil
 }
 
-func (ps *PersistStorage) GetUserFromDB(ctx context.Context, untrustedUser dto.User) (dto.User, dto.User, error) {
+func (ps *PersistStorage) CheckUser(ctx context.Context, untrustedUser dto.User) (dto.User, error) {
 	var orUser dto.User
 
 	row := ps.QueryRow(ctx, selectUser, untrustedUser.Login)
 
 	if err := row.Scan(&orUser.Login, &orUser.Hash); err != nil {
-		return dto.User{}, dto.User{}, err
+		return dto.User{}, err
 	}
 
 	ps.log.Infoln("Get user from db:", orUser.Login)
-	return untrustedUser, orUser, nil
+	return orUser, nil
 }
