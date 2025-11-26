@@ -17,17 +17,21 @@ type PgxIface interface {
 	Close()
 }
 
-type InsertUserStruct struct {
+type DMLUserStruct struct {
 	DML  string
 	Name string
 }
 
 var (
-	InsertUser = InsertUserStruct{
+	InsertUser = DMLUserStruct{
 		Name: "Add Users (batch)",
 		DML: ` INSERT INTO users (username, hash) 
 		VALUES ($1, $2)`,
 	}
+	selectUser = `
+		SELECT username,hash FROM users
+		WHERE USERNAME = $1
+	`
 )
 
 const (
@@ -53,10 +57,6 @@ const (
 			BALANCE 	REAL NOT NULL,
 			UPLOADED_AT TIMESTAMPTZ DEFAULT now()
 		)`
-	selectUser = `
-		SELECT * FROM users
-		WHERE USERNAME = $1
-	`
 )
 
 type PersistStorage struct {
@@ -110,21 +110,24 @@ func (ps *PersistStorage) RegisterUser(ctx context.Context, user dto.User) error
 	batch.Queue(prepareState.Name, user.Login, user.Hash)
 
 	res := tx.SendBatch(ctx, batch)
-	defer res.Close()
 	ct, err := res.Exec()
 	if err != nil {
 		return fmt.Errorf("error with sending batch data %w, with user %v", err, user)
 	}
-	ps.log.Infoln("batch data was sending, rows:", ct.RowsAffected(), "for user:", user.Login)
+
+	res.Close()
 
 	if err := tx.Commit(ctx); err != nil {
+		ps.log.Warnln("cannot commit register tx", err)
 		return err
 	}
+
+	ps.log.Infoln("batch data was sending, rows:", ct.RowsAffected(), "for user:", user.Login)
 
 	return nil
 }
 
-func (ps *PersistStorage) CheckUser(ctx context.Context, untrustedUser dto.User) (dto.User, error) {
+func (ps *PersistStorage) CheckUser(ctx context.Context, untrustedUser dto.UserInput) (dto.User, error) {
 	var orUser dto.User
 
 	row := ps.QueryRow(ctx, selectUser, untrustedUser.Login)
@@ -133,6 +136,6 @@ func (ps *PersistStorage) CheckUser(ctx context.Context, untrustedUser dto.User)
 		return dto.User{}, err
 	}
 
-	ps.log.Infoln("Get user from db:", orUser.Login)
+	ps.log.Infoln("Get trust user from db:", orUser.Login)
 	return orUser, nil
 }

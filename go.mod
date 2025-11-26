@@ -32,6 +32,7 @@ require (
 )
 
 require (
+	github.com/alexedwards/argon2id v1.0.0
 	github.com/gofiber/fiber/v2 v2.52.9
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/pashagolub/pgxmock/v4 v4.9.0

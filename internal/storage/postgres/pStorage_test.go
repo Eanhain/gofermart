@@ -55,16 +55,16 @@ func TestCheckUser(t *testing.T) {
 		name    string
 		ctx     context.Context
 		log     domain.Logger
-		user    dto.User
+		user    dto.UserInput
 		wantErr error
 	}{
 		{
 			name: "OK",
 			ctx:  context.Background(),
 			log:  logger,
-			user: dto.User{
-				Login: "test",
-				Hash:  "hash1",
+			user: dto.UserInput{
+				Login:    "test",
+				Password: "passw",
 			},
 			wantErr: nil,
 		},

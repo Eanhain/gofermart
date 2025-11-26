@@ -9,10 +9,12 @@ import (
 
 type Cache struct {
 	storage domain.Storage
+	log     domain.Logger
 }
 
-func InitCache(ctx context.Context, storage domain.Storage) (Cache, error) {
-	return Cache{storage}, nil
+func InitCache(ctx context.Context, log domain.Logger, storage domain.Storage) (Cache, error) {
+	return Cache{storage: storage,
+		log: log}, nil
 }
 
 func (c *Cache) InitSchema(ctx context.Context, log domain.Logger) error {
@@ -29,10 +31,11 @@ func (c *Cache) RegisterUser(ctx context.Context, user dto.User) error {
 	return nil
 }
 
-func (c *Cache) CheckUser(ctx context.Context, user dto.User) (dto.User, error) {
-	user, err := c.storage.CheckUser(ctx, user)
-	if err == nil {
+func (c *Cache) CheckUser(ctx context.Context, user dto.UserInput) (dto.User, error) {
+	tUser, err := c.storage.CheckUser(ctx, user)
+	if err != nil {
+		c.log.Warnln("Check user error", tUser, err)
 		return dto.User{}, err
 	}
-	return user, nil
+	return tUser, nil
 }

@@ -47,7 +47,7 @@ func main() {
 
 	defer pStore.Close()
 
-	cache, err := cache.InitCache(ctx, pStore)
+	cache, err := cache.InitCache(ctx, log, pStore)
 	if err != nil {
 		log.Errorln("can't create cache instance", err)
 	}
