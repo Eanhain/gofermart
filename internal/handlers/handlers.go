@@ -24,7 +24,15 @@ func (r *app) StartServer(ctx context.Context) error {
 }
 
 func (r *app) CreateHandlers(ctx context.Context) error {
-	r.Post("/api/user/register")
+	r.Post("/api/user/register/", r.HandlerRegUser)
 	err := r.Listen(r.server)
 	return err
+}
+
+func (r *app) HandlerRegUser(c *fiber.Ctx) error {
+	err := c.SendString("Registr new user")
+	if err != nil {
+		return err
+	}
+	return nil
 }

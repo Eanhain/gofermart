@@ -22,8 +22,8 @@ func (c *Cache) InitSchema(ctx context.Context, log domain.Logger) error {
 	return nil
 }
 
-func (c *Cache) RegisterUser(ctx context.Context, users dto.UserArray) error {
-	if err := c.storage.RegisterUser(ctx, users); err != nil {
+func (c *Cache) RegisterUser(ctx context.Context, user dto.User) error {
+	if err := c.storage.RegisterUser(ctx, user); err != nil {
 		return err
 	}
 	return nil

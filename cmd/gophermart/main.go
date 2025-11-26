@@ -52,17 +52,16 @@ func main() {
 		log.Errorln("can't create cache instance", err)
 	}
 
-	serv := service.InitialService(&cache)
-
+	serv, err := service.InitialService(ctx, &cache, log)
 	if err != nil {
 		log.Errorln("can't create Service instance", err)
 	}
 
-	if err := pStore.InitSchema(ctx, log); err != nil {
-		log.Errorln("can't complete ddls", err)
-	}
-
 	r := route.InitialApp(log, serv, flagsIn.GetAddr())
+
+	if err := r.CreateHandlers(ctx); err != nil {
+		log.Errorln("can't create Handlers instance", err)
+	}
 
 	if err := r.StartServer(ctx); err != nil {
 		log.Errorln("cannot start server", err)

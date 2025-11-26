@@ -94,7 +94,7 @@ func (ps *PersistStorage) InitSchema(ctx context.Context, log domain.Logger) err
 	return nil
 }
 
-func (ps *PersistStorage) RegisterUser(ctx context.Context, users dto.UserArray) error {
+func (ps *PersistStorage) RegisterUser(ctx context.Context, user dto.User) error {
 	tx, err := ps.BeginTx(ctx, pgx.TxOptions{})
 	defer tx.Rollback(ctx)
 	if err != nil {
@@ -107,19 +107,15 @@ func (ps *PersistStorage) RegisterUser(ctx context.Context, users dto.UserArray)
 
 	batch := &pgx.Batch{}
 
-	for _, user := range users {
-		batch.Queue(prepareState.Name, user.Login, user.Hash)
-	}
+	batch.Queue(prepareState.Name, user.Login, user.Hash)
 
 	res := tx.SendBatch(ctx, batch)
 	defer res.Close()
-	for i := 0; i < len(users); i++ {
-		ct, err := res.Exec()
-		if err != nil {
-			return fmt.Errorf("error with sending batch data %w, with user %v", err, users[i])
-		}
-		ps.log.Infoln("batch data was sending, rows:", ct.RowsAffected(), "for user:", users[i].Login)
+	ct, err := res.Exec()
+	if err != nil {
+		return fmt.Errorf("error with sending batch data %w, with user %v", err, user)
 	}
+	ps.log.Infoln("batch data was sending, rows:", ct.RowsAffected(), "for user:", user.Login)
 
 	if err := tx.Commit(ctx); err != nil {
 		return err

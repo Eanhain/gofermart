@@ -93,26 +93,17 @@ func TestRegisterUser(t *testing.T) {
 		name    string
 		ctx     context.Context
 		log     domain.Logger
-		users   dto.UserArray
+		user    dto.User
 		wantErr error
 	}{
 		{
 			name: "OK",
 			ctx:  context.Background(),
 			log:  logger,
-			users: dto.UserArray{
-				dto.User{
-					Login: "test",
-					Hash:  "hash1",
-				},
-				dto.User{
-					Login: "test2",
-					Hash:  "hash2",
-				},
-				dto.User{
-					Login: "test3",
-					Hash:  "hash3",
-				}},
+			user: dto.User{
+				Login: "test",
+				Hash:  "hash1",
+			},
 			wantErr: nil,
 		},
 	}
@@ -127,13 +118,11 @@ func TestRegisterUser(t *testing.T) {
 			mock.ExpectPrepare(InsertUser.Name, InsertUser.DML)
 			connCommand := pgconn.NewCommandTag("INSERT")
 			mockBatch := mock.ExpectBatch()
-			for _, user := range tt.users {
-				mockBatch.ExpectExec(InsertUser.Name).WithArgs(user.Login, user.Hash).WillReturnResult(connCommand)
-			}
+			mockBatch.ExpectExec(InsertUser.Name).WithArgs(tt.user.Login, tt.user.Hash).WillReturnResult(connCommand)
 			mock.ExpectCommit()
 			defer psInst.Close()
 
-			if err := psInst.RegisterUser(tt.ctx, tt.users); err != tt.wantErr {
+			if err := psInst.RegisterUser(tt.ctx, tt.user); err != tt.wantErr {
 				t.Fatalf("CheckUser() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
