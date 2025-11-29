@@ -8,13 +8,14 @@ import (
 )
 
 type Cache struct {
-	storage domain.Storage
-	log     domain.Logger
+	storage   domain.Storage
+	log       domain.Logger
+	authUsers map[string]bool
 }
 
 func InitCache(ctx context.Context, log domain.Logger, storage domain.Storage) (Cache, error) {
 	return Cache{storage: storage,
-		log: log}, nil
+		log: log, authUsers: make(map[string]bool)}, nil
 }
 
 func (c *Cache) InitSchema(ctx context.Context, log domain.Logger) error {
@@ -37,5 +38,26 @@ func (c *Cache) CheckUser(ctx context.Context, user dto.UserInput) (dto.User, er
 		c.log.Warnln("Check user error", tUser, err)
 		return dto.User{}, err
 	}
+	c.authUsers[user.Login] = true
 	return tUser, nil
+}
+
+func (c *Cache) GetUserID(ctx context.Context, username string) (int, error) {
+	id, err := c.storage.GetUserID(ctx, username)
+	if err != nil {
+		return -1, err
+	}
+	return id, nil
+}
+
+func (c *Cache) InsertNewUserOrder(ctx context.Context, order int, userID int) error {
+	err := c.storage.InsertNewUserOrder(ctx, order, userID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Cache) CheckAuthUser(user string) bool {
+	return c.authUsers[user]
 }

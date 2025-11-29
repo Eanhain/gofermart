@@ -3,10 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	dto "github.com/Eanhain/gofermart/internal/api"
 	domain "github.com/Eanhain/gofermart/internal/domain"
 	hash "github.com/Eanhain/gofermart/internal/hash"
+	"github.com/theplant/luhn"
 )
 
 type Service struct {
@@ -36,10 +38,38 @@ func (s *Service) RegUser(ctx context.Context, user dto.UserInput) error {
 	return err
 }
 
-// TODO
-func (s *Service) PostUserOrders(ctx context.Context, user dto.User) error {
-	err := s.c.RegisterUser(ctx, user)
-	return err
+func (s *Service) PostUserOrder(ctx context.Context, user dto.User, order string) error {
+	if s.c.CheckAuthUser(user.Login) {
+		id, err := s.c.GetUserID(ctx, user.Login)
+		if err != nil {
+			return nil
+		}
+		orderInt, err := strconv.Atoi(order)
+		if err != nil {
+			return fmt.Errorf("can't convert order to int %w", err)
+		}
+		s.CheckOrderByLuna(ctx, order)
+		if err := s.c.InsertNewUserOrder(ctx, orderInt, id); err != nil {
+			return err
+		}
+		return nil
+	} else {
+		s.log.Warnln("user doesn't find in auth list")
+		return nil
+	}
+}
+
+func (s *Service) CheckOrderByLuna(ctx context.Context, order string) (bool, error) {
+	orderInt, err := strconv.Atoi(order)
+	if err != nil {
+		return false, fmt.Errorf("can't convert order to int %w", err)
+	}
+	if ok := luhn.Valid(orderInt); ok {
+		s.log.Infoln("Order id valid: ", order)
+		return true, nil
+	}
+	s.log.Infoln("Order id not valid: ", order)
+	return false, nil
 }
 
 // TODO

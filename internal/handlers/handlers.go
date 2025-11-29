@@ -28,6 +28,7 @@ func (r *app) StartServer(ctx context.Context) error {
 func (r *app) CreateHandlers(ctx context.Context) error {
 	r.Post("/api/user/register", r.HandlerRegUser)
 	r.Post("/api/user/login", r.HandlerAuthUser)
+	r.Post("/api/user/orders", r.HandlerPushOrder)
 	err := r.Listen(r.server)
 	return err
 }
@@ -51,6 +52,18 @@ func (r *app) HandlerAuthUser(c *fiber.Ctx) error {
 		return nil
 	}
 	if _, err := r.service.AuthUser(context.TODO(), user); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *app) HandlerPushOrder(c *fiber.Ctx) error {
+	var order string
+	if err := c.BodyParser(&order); err != nil {
+		r.logger.Warnln("can't parse body for push order", err)
+		return nil
+	}
+	if err := r.service.PostUserOrder(context.TODO(), user, order); err != nil {
 		return err
 	}
 	return nil

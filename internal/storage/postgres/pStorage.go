@@ -7,6 +7,7 @@ import (
 	dto "github.com/Eanhain/gofermart/internal/api"
 	domain "github.com/Eanhain/gofermart/internal/domain"
 	pgx "github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	pgxpool "github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -14,6 +15,7 @@ type PgxIface interface {
 	Begin(context.Context) (pgx.Tx, error)
 	BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
 	QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row
+	Exec(ctx context.Context, sql string, arguments ...any) (commandTag pgconn.CommandTag, err error)
 	Close()
 }
 
@@ -28,6 +30,15 @@ var (
 		DML: ` INSERT INTO users (username, hash) 
 		VALUES ($1, $2)`,
 	}
+	InsertOrder = DMLUserStruct{
+		Name: "Insert user order",
+		DML: `INSERT INTO orders (ID, USER_ID, STATUS, ACCURAL)
+		VALUES ($1, $2, 'NEW', 0)`,
+	}
+	selectUserID = `
+		SELECT id FROM users 
+		WHERE USERNAME = $1
+	`
 	selectUser = `
 		SELECT username,hash FROM users
 		WHERE USERNAME = $1
@@ -44,10 +55,10 @@ const (
 		)`
 	ddlOrders = `
 		CREATE TABLE IF NOT EXISTS orders (
-			ID			SERIAL PRIMARY KEY,
+			ID			BIGINT PRIMARY KEY,
 			USER_ID 	INTEGER REFERENCES users (ID),
 			STATUS 		TEXT NOT NULL,
-			ACCURAL 	REAL,
+			ACCURAL 	REAL NOT NULL,
 			UPLOADED_AT TIMESTAMPTZ DEFAULT now()
 		)`
 	ddlBalance = `
@@ -138,4 +149,24 @@ func (ps *PersistStorage) CheckUser(ctx context.Context, untrustedUser dto.UserI
 
 	ps.log.Infoln("Get trust user from db:", orUser.Login)
 	return orUser, nil
+}
+
+func (ps *PersistStorage) GetUserID(ctx context.Context, username string) (int, error) {
+	var id int
+	row := ps.QueryRow(ctx, selectUserID, username)
+	if err := row.Scan(&id); err != nil {
+		return -1, err
+	}
+	return id, nil
+}
+
+func (ps *PersistStorage) InsertNewUserOrder(ctx context.Context, order int, userID int) error {
+	tag, err := ps.Exec(ctx, InsertOrder.DML, order, userID)
+	if err != nil {
+		ps.log.Warnln("Can't insert user order", err)
+		return err
+	}
+	ps.log.Infoln("Insert user order", tag)
+	return nil
+
 }

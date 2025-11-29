@@ -14,4 +14,5 @@ type Service interface {
 	GetUserBalance(ctx context.Context, user dto.User) error
 	GetUserWithdrawals(ctx context.Context, user dto.User) error
 	PostUserWithdraw(ctx context.Context, user dto.User) error
+	PostUserOrder(ctx context.Context, user dto.User, order string) error
 }
