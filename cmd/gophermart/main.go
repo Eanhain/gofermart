@@ -57,7 +57,7 @@ func main() {
 		log.Errorln("can't create Service instance", err)
 	}
 
-	r := route.InitialApp(log, serv, flagsIn.GetAddr())
+	r := route.InitialApp(log, serv, flagsIn.GetAddr(), "supersecret")
 
 	if err := r.CreateHandlers(ctx); err != nil {
 		log.Errorln("can't create Handlers instance", err)

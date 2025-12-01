@@ -38,25 +38,20 @@ func (s *Service) RegUser(ctx context.Context, user dto.UserInput) error {
 	return err
 }
 
-func (s *Service) PostUserOrder(ctx context.Context, user dto.User, order string) error {
-	if s.c.CheckAuthUser(user.Login) {
-		id, err := s.c.GetUserID(ctx, user.Login)
-		if err != nil {
-			return nil
-		}
-		orderInt, err := strconv.Atoi(order)
-		if err != nil {
-			return fmt.Errorf("can't convert order to int %w", err)
-		}
-		s.CheckOrderByLuna(ctx, order)
-		if err := s.c.InsertNewUserOrder(ctx, orderInt, id); err != nil {
-			return err
-		}
-		return nil
-	} else {
-		s.log.Warnln("user doesn't find in auth list")
+func (s *Service) PostUserOrder(ctx context.Context, username string, order string) error {
+	id, err := s.c.GetUserID(ctx, username)
+	if err != nil {
 		return nil
 	}
+	orderInt, err := strconv.Atoi(order)
+	if err != nil {
+		return fmt.Errorf("can't convert order to int %w", err)
+	}
+	s.CheckOrderByLuna(ctx, order)
+	if err := s.c.InsertNewUserOrder(ctx, orderInt, id); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *Service) CheckOrderByLuna(ctx context.Context, order string) (bool, error) {
