@@ -43,7 +43,9 @@ func (s *Service) PostUserOrder(ctx context.Context, username string, order stri
 	if err != nil {
 		return nil
 	}
-	s.CheckOrderByLuna(ctx, order)
+	if _, err = s.CheckOrderByLuna(ctx, order); err != nil {
+		return err
+	}
 	if err := s.c.InsertNewUserOrder(ctx, order, id); err != nil {
 		return err
 	}
@@ -60,7 +62,7 @@ func (s *Service) CheckOrderByLuna(ctx context.Context, order string) (bool, err
 		return true, nil
 	}
 	s.log.Infoln("Order id not valid: ", order)
-	return false, nil
+	return false, fmt.Errorf("order is not valid")
 }
 
 // TODO
