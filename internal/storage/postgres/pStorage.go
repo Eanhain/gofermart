@@ -55,7 +55,7 @@ const (
 		)`
 	ddlOrders = `
 		CREATE TABLE IF NOT EXISTS orders (
-			ID			BIGINT PRIMARY KEY,
+			ID			TEXT PRIMARY KEY,
 			USER_ID 	INTEGER REFERENCES users (ID),
 			STATUS 		TEXT NOT NULL,
 			ACCURAL 	REAL NOT NULL,
@@ -160,7 +160,7 @@ func (ps *PersistStorage) GetUserID(ctx context.Context, username string) (int, 
 	return id, nil
 }
 
-func (ps *PersistStorage) InsertNewUserOrder(ctx context.Context, order int, userID int) error {
+func (ps *PersistStorage) InsertNewUserOrder(ctx context.Context, order string, userID int) error {
 	tag, err := ps.Exec(ctx, InsertOrder.DML, order, userID)
 	if err != nil {
 		ps.log.Warnln("Can't insert user order", err)

@@ -50,7 +50,7 @@ func (c *Cache) GetUserID(ctx context.Context, username string) (int, error) {
 	return id, nil
 }
 
-func (c *Cache) InsertNewUserOrder(ctx context.Context, order int, userID int) error {
+func (c *Cache) InsertNewUserOrder(ctx context.Context, order string, userID int) error {
 	err := c.storage.InsertNewUserOrder(ctx, order, userID)
 	if err != nil {
 		return err

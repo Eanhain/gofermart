@@ -43,12 +43,8 @@ func (s *Service) PostUserOrder(ctx context.Context, username string, order stri
 	if err != nil {
 		return nil
 	}
-	orderInt, err := strconv.Atoi(order)
-	if err != nil {
-		return fmt.Errorf("can't convert order to int %w", err)
-	}
 	s.CheckOrderByLuna(ctx, order)
-	if err := s.c.InsertNewUserOrder(ctx, orderInt, id); err != nil {
+	if err := s.c.InsertNewUserOrder(ctx, order, id); err != nil {
 		return err
 	}
 	return nil
