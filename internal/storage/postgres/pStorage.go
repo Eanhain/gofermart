@@ -14,8 +14,9 @@ import (
 type PgxIface interface {
 	Begin(context.Context) (pgx.Tx, error)
 	BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
-	QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 	Exec(ctx context.Context, sql string, arguments ...any) (commandTag pgconn.CommandTag, err error)
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
 	Close()
 }
 
@@ -42,6 +43,11 @@ var (
 	selectUser = `
 		SELECT username,hash FROM users
 		WHERE USERNAME = $1
+	`
+	selectUserOrders = `
+		select ID as number, status, accural accrual, uploaded_at 
+		from orders 
+		where user_id = $1;
 	`
 )
 
@@ -168,5 +174,27 @@ func (ps *PersistStorage) InsertNewUserOrder(ctx context.Context, order string, 
 	}
 	ps.log.Infoln("Insert user order", tag)
 	return nil
+
+}
+
+func (ps *PersistStorage) GetUserOrders(ctx context.Context, userID int) (dto.OrdersDesc, error) {
+	var orders dto.OrdersDesc
+	var order dto.OrderDesc
+	rows, err := ps.Query(ctx, selectUserOrders, userID)
+	if err != nil {
+		ps.log.Warnln("Can't get user order", err)
+		return dto.OrdersDesc{}, err
+	}
+
+	for rows.Next() {
+		if err := rows.Scan(&order.Number, &order.Status, &order.Accrual, &order.Uploaded_at); err != nil {
+			ps.log.Warnln("can't parse order", err)
+			return dto.OrdersDesc{}, err
+		}
+		orders = append(orders, order)
+	}
+
+	ps.log.Infoln("Get user orders", orders)
+	return orders, nil
 
 }

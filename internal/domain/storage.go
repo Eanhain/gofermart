@@ -13,6 +13,7 @@ type Cache interface {
 	InsertNewUserOrder(ctx context.Context, order string, userID int) error
 	GetUserID(ctx context.Context, user string) (int, error)
 	CheckAuthUser(user string) bool
+	GetUserOrders(ctx context.Context, userID int) (dto.OrdersDesc, error)
 }
 
 type Storage interface {
@@ -21,4 +22,5 @@ type Storage interface {
 	CheckUser(ctx context.Context, users dto.UserInput) (dto.User, error)
 	InsertNewUserOrder(ctx context.Context, order string, userID int) error
 	GetUserID(ctx context.Context, user string) (int, error)
+	GetUserOrders(ctx context.Context, userID int) (dto.OrdersDesc, error)
 }

@@ -65,10 +65,16 @@ func (s *Service) CheckOrderByLuna(ctx context.Context, order string) (bool, err
 	return false, fmt.Errorf("order is not valid")
 }
 
-// TODO
-func (s *Service) GetUserOrders(ctx context.Context, user dto.User) error {
-	err := s.c.RegisterUser(ctx, user)
-	return err
+func (s *Service) GetUserOrders(ctx context.Context, username string) (dto.OrdersDesc, error) {
+	id, err := s.c.GetUserID(ctx, username)
+	if err != nil {
+		return dto.OrdersDesc{}, err
+	}
+	orders, err := s.c.GetUserOrders(ctx, id)
+	if err != nil {
+		return dto.OrdersDesc{}, err
+	}
+	return orders, nil
 }
 
 // TODO

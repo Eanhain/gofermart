@@ -61,3 +61,11 @@ func (c *Cache) InsertNewUserOrder(ctx context.Context, order string, userID int
 func (c *Cache) CheckAuthUser(user string) bool {
 	return c.authUsers[user]
 }
+
+func (c *Cache) GetUserOrders(ctx context.Context, userID int) (dto.OrdersDesc, error) {
+	orders, err := c.storage.GetUserOrders(ctx, userID)
+	if err != nil {
+		return dto.OrdersDesc{}, err
+	}
+	return orders, nil
+}
