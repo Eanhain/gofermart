@@ -80,6 +80,13 @@ const (
 			WITHDRAWN	REAL,
 			UPLOADED_AT TIMESTAMPTZ DEFAULT now()
 		)`
+	ddlWithdrawOrders = `
+	CREATE TABLE IF NOT EXISTS withdraw_orders (
+		ID			SERIAL PRIMARY KEY,
+		USER_ID 	INTEGER REFERENCES users (ID),
+		ORDER_ID	TEXT REFERENCES orders (ID),
+		SUM			REAL
+	)`
 )
 
 type PersistStorage struct {
@@ -97,7 +104,7 @@ func InitialPersistStorage(ctx context.Context, log domain.Logger, connString st
 }
 
 func (ps *PersistStorage) InitSchema(ctx context.Context, log domain.Logger) error {
-	ddls := []string{ddlUsers, ddlOrders, ddlBalance}
+	ddls := []string{ddlUsers, ddlOrders, ddlBalance, ddlWithdrawOrders}
 	tx, err := ps.BeginTx(ctx, pgx.TxOptions{})
 	defer tx.Rollback(ctx)
 	if err != nil {
