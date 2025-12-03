@@ -49,6 +49,11 @@ var (
 		from orders 
 		where user_id = $1;
 	`
+	selectUserBalance = `
+		select balance as current, withdrawn 
+		from balance 
+		where user_id = $1;
+	`
 )
 
 const (
@@ -72,6 +77,7 @@ const (
 			ID			SERIAL PRIMARY KEY,
 			USER_ID 	INTEGER REFERENCES users (ID),
 			BALANCE 	REAL NOT NULL,
+			WITHDRAWN	REAL,
 			UPLOADED_AT TIMESTAMPTZ DEFAULT now()
 		)`
 )
@@ -196,5 +202,15 @@ func (ps *PersistStorage) GetUserOrders(ctx context.Context, userID int) (dto.Or
 
 	ps.log.Infoln("Get user orders", orders)
 	return orders, nil
+
+}
+
+func (ps *PersistStorage) GetUserBalance(ctx context.Context, userID int) (dto.Amount, error) {
+	var balance dto.Amount
+	row := ps.QueryRow(ctx, selectUserBalance, userID)
+	if err := row.Scan(&balance.Current, &balance.Withdrawn); err != nil {
+		return dto.Amount{}, err
+	}
+	return balance, nil
 
 }

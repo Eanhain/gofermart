@@ -69,3 +69,12 @@ func (c *Cache) GetUserOrders(ctx context.Context, userID int) (dto.OrdersDesc, 
 	}
 	return orders, nil
 }
+
+func (c *Cache) GetUserBalance(ctx context.Context, userID int) (dto.Amount, error) {
+	balance, err := c.storage.GetUserBalance(ctx, userID)
+	if err != nil {
+		return dto.Amount{}, err
+	}
+	return balance, nil
+
+}

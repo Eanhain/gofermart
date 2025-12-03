@@ -36,6 +36,7 @@ func (r *app) CreateHandlers(ctx context.Context) error {
 	r.Use(jwtware.New(r.jwtConf))
 	r.Post("/api/user/orders", r.HandlerPushOrder)
 	r.Get("/api/user/orders", r.HandlerGetUserOrders)
+	r.Get("/api/user/balance", r.HandlerGetUserBalance)
 	err := r.Listen(r.server)
 	return err
 }
@@ -58,6 +59,23 @@ func (r *app) LoginJWT(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 	return c.JSON(fiber.Map{"token": tokenJWT})
+}
+
+func (r *app) HandlerGetUserBalance(c *fiber.Ctx) error {
+	user := c.Locals("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	username := claims["login"].(string)
+	orders, err := r.service.GetUserBalance(context.TODO(), username)
+	if err != nil {
+		r.logger.Warnln("Can't get balance", err)
+		return err
+	}
+
+	if err := c.JSON(orders); err != nil {
+		r.logger.Warnln("Can't get json", err)
+		return err
+	}
+	return nil
 }
 
 func (r *app) HandlerGetUserOrders(c *fiber.Ctx) error {

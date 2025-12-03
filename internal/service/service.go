@@ -77,10 +77,16 @@ func (s *Service) GetUserOrders(ctx context.Context, username string) (dto.Order
 	return orders, nil
 }
 
-// TODO
-func (s *Service) GetUserBalance(ctx context.Context, user dto.User) error {
-	err := s.c.RegisterUser(ctx, user)
-	return err
+func (s *Service) GetUserBalance(ctx context.Context, username string) (dto.Amount, error) {
+	id, err := s.c.GetUserID(ctx, username)
+	if err != nil {
+		return dto.Amount{}, err
+	}
+	balance, err := s.c.GetUserBalance(ctx, id)
+	if err != nil {
+		return dto.Amount{}, err
+	}
+	return balance, nil
 }
 
 // TODO
