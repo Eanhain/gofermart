@@ -17,7 +17,11 @@ cmd/gophermart/gophermart
 
 # Dependency directories (remove the comment below to include it)
 vendor/
+заметки
 
 # IDEs directories
 .idea
 .vscode
+.env
+
+.DS_Store
