@@ -105,6 +105,23 @@ func (r *app) HandlerRegUser(c *fiber.Ctx) error {
 	if err := r.service.RegUser(context.TODO(), user); err != nil {
 		return err
 	}
+	r.service.AuthUser(context.TODO(), user)
+	if ok, err := r.service.AuthUser(context.TODO(), user); err != nil || !ok {
+		return fmt.Errorf("user not auth %v", user.Login)
+	}
+	claims := jwt.MapClaims{
+		"login": user.Login,
+		"exp":   time.Now().Add(time.Hour * 72).Unix(),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	tokenJWT, err := token.SignedString(r.jwtConf.SigningKey.Key)
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	c.Set("Authorization", "Bearer "+tokenJWT)
+
 	return nil
 }
 
