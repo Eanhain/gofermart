@@ -12,12 +12,12 @@ import (
 )
 
 type Service struct {
-	c   domain.Cache
+	c   domain.Storage
 	log domain.Logger
 }
 
 // TODO new service (whats service?)
-func InitialService(ctx context.Context, c domain.Cache, log domain.Logger) (*Service, error) {
+func InitialService(ctx context.Context, c domain.Storage, log domain.Logger) (*Service, error) {
 	if err := c.InitSchema(ctx, log); err != nil {
 		return nil, fmt.Errorf("couldn't initialize service layer: %w", err)
 	}
@@ -47,6 +47,7 @@ func (s *Service) PostUserOrder(ctx context.Context, username string, order stri
 	if _, err = s.CheckOrderByLuna(ctx, order); err != nil {
 		return err
 	}
+
 	if err := s.c.InsertNewUserOrder(ctx, order, id); err != nil {
 		return err
 	}

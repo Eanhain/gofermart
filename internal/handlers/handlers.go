@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -42,13 +43,7 @@ func (r *app) CreateHandlers(ctx context.Context) error {
 	return err
 }
 
-func (r *app) LoginJWT(c *fiber.Ctx) error {
-	username, err := r.AuthUser(c)
-	if err != nil {
-		r.logger.Warnln("Can't get jwt token: ", err)
-		c.SendStatus(fiber.StatusUnauthorized)
-		return fmt.Errorf("can't get jwt token: %w", err)
-	}
+func (r *app) CreateJWT(username string) (string, error) {
 	claims := jwt.MapClaims{
 		"login": username,
 		"exp":   time.Now().Add(time.Hour * 72).Unix(),
@@ -57,8 +52,25 @@ func (r *app) LoginJWT(c *fiber.Ctx) error {
 
 	tokenJWT, err := token.SignedString(r.jwtConf.SigningKey.Key)
 	if err != nil {
-		return c.SendStatus(fiber.StatusInternalServerError)
+		return "", err
 	}
+	return tokenJWT, nil
+}
+
+func (r *app) LoginJWT(c *fiber.Ctx) error {
+	username, err := r.AuthUser(c)
+	if err != nil {
+		r.logger.Warnln("Can't auth user: ", err)
+		c.SendStatus(fiber.StatusUnauthorized)
+		return errors.Join(domain.ErrAuthUser, err)
+	}
+	tokenJWT, err := r.CreateJWT(username)
+	if err != nil {
+		c.SendStatus(500)
+		r.logger.Warnln("Can't create jwt token", err)
+		return errors.Join(domain.ErrJWTToken, err)
+	}
+	c.Set("Authorization", "Bearer "+tokenJWT)
 	return c.JSON(fiber.Map{"token": tokenJWT})
 }
 
@@ -107,17 +119,16 @@ func (r *app) HandlerRegUser(c *fiber.Ctx) error {
 	}
 	r.service.AuthUser(context.TODO(), user)
 	if ok, err := r.service.AuthUser(context.TODO(), user); err != nil || !ok {
-		return fmt.Errorf("user not auth %v", user.Login)
+		r.logger.Warnln("Can't auth user: ", err)
+		c.SendStatus(fiber.StatusUnauthorized)
+		return errors.Join(domain.ErrAuthUser, err)
 	}
-	claims := jwt.MapClaims{
-		"login": user.Login,
-		"exp":   time.Now().Add(time.Hour * 72).Unix(),
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	tokenJWT, err := token.SignedString(r.jwtConf.SigningKey.Key)
+	tokenJWT, err := r.CreateJWT(user.Login)
 	if err != nil {
-		return c.SendStatus(fiber.StatusInternalServerError)
+		c.SendStatus(500)
+		r.logger.Warnln("Can't create jwt token", err)
+		return errors.Join(domain.ErrJWTToken, err)
 	}
 
 	c.Set("Authorization", "Bearer "+tokenJWT)

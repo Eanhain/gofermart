@@ -7,7 +7,6 @@ import (
 	route "github.com/Eanhain/gofermart/internal/handlers"
 	logger "github.com/Eanhain/gofermart/internal/logger"
 	"github.com/Eanhain/gofermart/internal/service"
-	cache "github.com/Eanhain/gofermart/internal/storage/cache"
 	store "github.com/Eanhain/gofermart/internal/storage/postgres"
 )
 
@@ -47,12 +46,7 @@ func main() {
 
 	defer pStore.Close()
 
-	cache, err := cache.InitCache(ctx, log, pStore)
-	if err != nil {
-		log.Errorln("can't create cache instance", err)
-	}
-
-	serv, err := service.InitialService(ctx, &cache, log)
+	serv, err := service.InitialService(ctx, pStore, log)
 	if err != nil {
 		log.Errorln("can't create Service instance", err)
 	}
