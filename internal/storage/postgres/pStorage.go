@@ -56,6 +56,8 @@ var (
 	`
 )
 
+// TODO Migration
+// sql-c?
 const (
 	ddlUsers = ` 
 		CREATE TABLE IF NOT EXISTS users (
@@ -94,6 +96,7 @@ type PersistStorage struct {
 	log domain.Logger
 }
 
+// select for update -> coins
 func InitialPersistStorage(ctx context.Context, log domain.Logger, connString string) (*PersistStorage, error) {
 	pgxPool, err := pgxpool.New(ctx, connString)
 	if err != nil {

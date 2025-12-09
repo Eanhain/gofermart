@@ -30,6 +30,7 @@ func (r *app) StartServer(ctx context.Context) error {
 	return err
 }
 
+// rate limit error - 429 - accrual
 func (r *app) CreateHandlers(ctx context.Context) error {
 	r.Post("/api/user/register", r.HandlerRegUser)
 	r.Post("/api/user/login", r.LoginJWT)
