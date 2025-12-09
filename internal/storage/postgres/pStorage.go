@@ -54,6 +54,16 @@ var (
 		from balance 
 		where user_id = $1;
 	`
+	selectUserOrder = `
+		select ID as number 
+		from orders 
+		where user_id = $1 and id = $2;
+	`
+	selectOrder = `
+		select ID as number 
+		from orders 
+		where id = $1;
+	`
 )
 
 // TODO Migration
@@ -223,4 +233,24 @@ func (ps *PersistStorage) GetUserBalance(ctx context.Context, userID int) (dto.A
 	}
 	return balance, nil
 
+}
+
+func (ps *PersistStorage) CheckUserOrderNonExist(ctx context.Context, userID int, orders string) error {
+	var orderOut string
+	out := ps.QueryRow(ctx, selectUserOrder, userID, orders)
+	out.Scan(&orderOut)
+	if orderOut != "" {
+		return domain.ErrOrderExist
+	}
+	return nil
+}
+
+func (ps *PersistStorage) CheckOrderNonExist(ctx context.Context, orders string) error {
+	var orderOut string
+	out := ps.QueryRow(ctx, selectOrder, orders)
+	out.Scan(&orderOut)
+	if orderOut != "" {
+		return domain.ErrOrderExistWrongUser
+	}
+	return nil
 }

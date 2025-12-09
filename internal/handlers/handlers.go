@@ -155,7 +155,13 @@ func (r *app) HandlerPushOrder(c *fiber.Ctx) error {
 	order := c.Body()
 	orderStr := string(order)
 	if err := r.service.PostUserOrder(context.TODO(), username, orderStr); err != nil {
+		if errors.Is(err, domain.ErrOrderExistWrongUser) {
+			c.Status(409)
+		} else if errors.Is(err, domain.ErrOrderExist) {
+			c.Status(200)
+		}
 		return err
 	}
+	c.Status(202)
 	return nil
 }
