@@ -61,14 +61,12 @@ func (r *app) LoginJWT(c *fiber.Ctx) error {
 	username, err := r.AuthUser(c)
 	if err != nil {
 		r.logger.Warnln("Can't auth user: ", err)
-		c.SendStatus(fiber.StatusUnauthorized)
-		return errors.Join(domain.ErrAuthUser, err)
+		return fiber.ErrUnauthorized
 	}
 	tokenJWT, err := r.CreateJWT(username)
 	if err != nil {
-		c.SendStatus(500)
 		r.logger.Warnln("Can't create jwt token", err)
-		return errors.Join(domain.ErrJWTToken, err)
+		return fiber.ErrInternalServerError
 	}
 	c.Set("Authorization", "Bearer "+tokenJWT)
 	return c.JSON(fiber.Map{"token": tokenJWT})
@@ -112,23 +110,25 @@ func (r *app) HandlerRegUser(c *fiber.Ctx) error {
 	var user dto.UserInput
 	if err := c.BodyParser(&user); err != nil {
 		r.logger.Warnln("can't parse body for registr", err)
-		return nil
+		return fiber.ErrInternalServerError
 	}
 	if err := r.service.RegUser(context.TODO(), user); err != nil {
-		return err
+		if errors.Is(err, domain.ErrConflict) {
+			return fiber.ErrConflict
+		} else {
+			return fiber.ErrInternalServerError
+		}
 	}
 	r.service.AuthUser(context.TODO(), user)
 	if ok, err := r.service.AuthUser(context.TODO(), user); err != nil || !ok {
 		r.logger.Warnln("Can't auth user: ", err)
-		c.SendStatus(fiber.StatusUnauthorized)
-		return errors.Join(domain.ErrAuthUser, err)
+		return fiber.ErrBadRequest
 	}
 
 	tokenJWT, err := r.CreateJWT(user.Login)
 	if err != nil {
-		c.SendStatus(500)
 		r.logger.Warnln("Can't create jwt token", err)
-		return errors.Join(domain.ErrJWTToken, err)
+		return fiber.ErrInternalServerError
 	}
 
 	c.Set("Authorization", "Bearer "+tokenJWT)
@@ -156,12 +156,14 @@ func (r *app) HandlerPushOrder(c *fiber.Ctx) error {
 	orderStr := string(order)
 	if err := r.service.PostUserOrder(context.TODO(), username, orderStr); err != nil {
 		if errors.Is(err, domain.ErrOrderExistWrongUser) {
-			c.Status(409)
+			return fiber.ErrConflict
 		} else if errors.Is(err, domain.ErrOrderExist) {
-			c.Status(200)
+			return nil
+		} else if errors.Is(err, domain.ErrOrderInvalid) {
+			return fiber.ErrUnprocessableEntity
 		}
-		return err
+		return fiber.ErrInternalServerError
 	}
-	c.Status(202)
+	c.SendStatus(fiber.StatusAccepted)
 	return nil
 }

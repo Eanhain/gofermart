@@ -10,4 +10,6 @@ var (
 	ErrOrderExistWrongUser = errors.New("order create for another user")
 	ErrJWTToken            = errors.New("can't create jwt token")
 	ErrAuthUser            = errors.New("can't auth user")
+	ErrConflict            = errors.New("data conflict")
+	ErrOrderInvalid        = errors.New("order is not valid")
 )

@@ -2,12 +2,15 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 
 	dto "github.com/Eanhain/gofermart/internal/api"
 	domain "github.com/Eanhain/gofermart/internal/domain"
 	hash "github.com/Eanhain/gofermart/internal/hash"
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/theplant/luhn"
 )
 
@@ -34,8 +37,14 @@ func (s *Service) AuthUser(ctx context.Context, user dto.UserInput) (bool, error
 }
 
 func (s *Service) RegUser(ctx context.Context, user dto.UserInput) error {
+	var pgErr *pgconn.PgError
 	hashedUser := hash.CreateUserHash(s.log, user)
 	err := s.c.RegisterUser(ctx, hashedUser)
+
+	if errors.As(err, &pgErr) && pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
+		err = domain.ErrConflict
+	}
+
 	return err
 }
 
@@ -77,7 +86,7 @@ func (s *Service) CheckOrderByLuna(ctx context.Context, order string) (bool, err
 		return true, nil
 	}
 	s.log.Infoln("Order id not valid: ", order)
-	return false, fmt.Errorf("order is not valid")
+	return false, fmt.Errorf("%w %v", domain.ErrOrderInvalid, order)
 }
 
 func (s *Service) GetUserOrders(ctx context.Context, username string) (dto.OrdersDesc, error) {
