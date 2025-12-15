@@ -213,7 +213,7 @@ func (ps *PersistStorage) GetUserOrders(ctx context.Context, userID int) (dto.Or
 	}
 
 	for rows.Next() {
-		if err := rows.Scan(&order.Number, &order.Status, &order.Accrual, &order.Uploaded_at); err != nil {
+		if err := rows.Scan(&order.Number, &order.Status, &order.Accrual, &order.UploadedAt); err != nil {
 			ps.log.Warnln("can't parse order", err)
 			return dto.OrdersDesc{}, err
 		}

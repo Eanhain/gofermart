@@ -14,7 +14,7 @@ type Withdrawn struct {
 	Order string  `json:"order" db:"order"`
 	Sum   float64 `json:"sum" db:"sum"`
 	// на входе его нет, только на выходе
-	Processed_at time.Time `json:"processed_at" db:"processed_at"`
+	ProcessedAt time.Time `json:"processed_at" db:"processed_at"`
 }
 
 // Аутентификация пользователя (прием на сервер)
@@ -33,10 +33,10 @@ type User struct {
 // Для взаимодействия с системой доступен один хендлер:
 // GET /api/orders/{number} — получение информации о расчёте начислений баллов лояльности.
 type OrderDesc struct {
-	Number      string    `json:"number" db:"number"`
-	Status      string    `json:"status" db:"status"`
-	Accrual     float64   `json:"accural,omitempty" db:"accural"`
-	Uploaded_at time.Time `json:"uploaded_at" db:"uploaded_at"`
+	Number     string    `json:"number" db:"number"`
+	Status     string    `json:"status" db:"status"`
+	Accrual    float64   `json:"accural,omitempty" db:"accural"`
+	UploadedAt time.Time `json:"uploaded_at" db:"uploaded_at"`
 }
 
 // Получение текущего баланса пользователя (отправка с сервера)

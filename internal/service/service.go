@@ -48,8 +48,8 @@ func (s *Service) RegUser(ctx context.Context, user dto.UserInput) error {
 	return err
 }
 
-func (s *Service) CheckUserOrderDubl(ctx context.Context, userId int, order string) error {
-	if err := s.c.CheckUserOrderNonExist(ctx, userId, order); err != nil {
+func (s *Service) CheckUserOrderDubl(ctx context.Context, userID int, order string) error {
+	if err := s.c.CheckUserOrderNonExist(ctx, userID, order); err != nil {
 		return err
 	}
 	if err := s.c.CheckOrderNonExist(ctx, order); err != nil {

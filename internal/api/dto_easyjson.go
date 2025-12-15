@@ -48,7 +48,7 @@ func easyjson56de76c1DecodeGithubComEanhainGofermartInternalApi(in *jlexer.Lexer
 				in.Skip()
 			} else {
 				if data := in.Raw(); in.Ok() {
-					in.AddError((out.Processed_at).UnmarshalJSON(data))
+					in.AddError((out.ProcessedAt).UnmarshalJSON(data))
 				}
 			}
 		default:
@@ -78,7 +78,7 @@ func easyjson56de76c1EncodeGithubComEanhainGofermartInternalApi(out *jwriter.Wri
 	{
 		const prefix string = ",\"processed_at\":"
 		out.RawString(prefix)
-		out.Raw((in.Processed_at).MarshalJSON())
+		out.Raw((in.ProcessedAt).MarshalJSON())
 	}
 	out.RawByte('}')
 }
@@ -365,7 +365,7 @@ func easyjson56de76c1DecodeGithubComEanhainGofermartInternalApi4(in *jlexer.Lexe
 				in.Skip()
 			} else {
 				if data := in.Raw(); in.Ok() {
-					in.AddError((out.Uploaded_at).UnmarshalJSON(data))
+					in.AddError((out.UploadedAt).UnmarshalJSON(data))
 				}
 			}
 		default:
@@ -400,7 +400,7 @@ func easyjson56de76c1EncodeGithubComEanhainGofermartInternalApi4(out *jwriter.Wr
 	{
 		const prefix string = ",\"uploaded_at\":"
 		out.RawString(prefix)
-		out.Raw((in.Uploaded_at).MarshalJSON())
+		out.Raw((in.UploadedAt).MarshalJSON())
 	}
 	out.RawByte('}')
 }
