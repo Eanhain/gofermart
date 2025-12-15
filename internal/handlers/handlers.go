@@ -23,7 +23,7 @@ type app struct {
 
 func InitialApp(log domain.Logger, service domain.Service, server string, supersecret string) app {
 	routeFiber := fiber.New()
-	return app{routeFiber, service, log, server, jwtware.Config{SigningKey: jwtware.SigningKey{Key: []byte(supersecret)}}}
+	return app{routeFiber, service, log, server, jwtware.Config{SigningKey: jwtware.SigningKey{Key: []byte(supersecret)}, ErrorHandler: jwtError}}
 }
 
 func (r *app) StartServer(ctx context.Context) error {
@@ -35,12 +35,22 @@ func (r *app) StartServer(ctx context.Context) error {
 func (r *app) CreateHandlers(ctx context.Context) error {
 	r.Post("/api/user/register", r.HandlerRegUser)
 	r.Post("/api/user/login", r.LoginJWT)
+	// r.Use()
 	r.Use(jwtware.New(r.jwtConf))
 	r.Post("/api/user/orders", r.HandlerPushOrder)
 	r.Get("/api/user/orders", r.HandlerGetUserOrders)
 	r.Get("/api/user/balance", r.HandlerGetUserBalance)
 	err := r.Listen(r.server)
 	return err
+}
+
+func jwtError(c *fiber.Ctx, err error) error {
+	if err.Error() == "Missing or malformed JWT" {
+		return c.Status(fiber.StatusUnauthorized).
+			JSON(fiber.Map{"status": "error", "message": "Missing or malformed JWT", "data": nil})
+	}
+	return c.Status(fiber.StatusUnauthorized).
+		JSON(fiber.Map{"status": "error", "message": "Invalid or expired JWT", "data": nil})
 }
 
 func (r *app) CreateJWT(username string) (string, error) {
