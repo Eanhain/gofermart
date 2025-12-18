@@ -70,12 +70,12 @@ func (s *Service) PostUserOrder(ctx context.Context, username string, order stri
 	}
 	if orderDesc.Number != "" {
 		order = orderDesc.Number
-		if orderDesc.Status != "" {
-			status = orderDesc.Status
-		} else {
-			status = "NEW"
-		}
 		accrual = orderDesc.Accrual
+	}
+	if orderDesc.Status != "" {
+		status = orderDesc.Status
+	} else {
+		status = "NEW"
 	}
 	id, err := s.c.GetUserID(ctx, username)
 	if err := s.CheckUserOrderDubl(ctx, id, order); err != nil {

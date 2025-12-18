@@ -12,23 +12,25 @@ import (
 
 type AgentAPI struct {
 	*fiber.Agent
-	log domain.Logger
+	accrualHost string
+	log         domain.Logger
 }
 
 func InitialAccrualApi(ctx context.Context, accrualURL string, log domain.Logger) (*AgentAPI, error) {
 	agent := fiber.AcquireAgent()
-	req := agent.Request()
-	req.Header.SetMethod("GET")
-	req.SetRequestURI(accrualURL)
-	if err := agent.Parse(); err != nil {
-		log.Warnln("can't init accrual api")
-		return nil, err
-	}
-	return &AgentAPI{agent, log}, nil
+
+	return &AgentAPI{agent, accrualURL, log}, nil
 }
 
 func (a AgentAPI) GetOrder(order string) (dto.OrderDesc, error) {
 	var orderDesc dto.OrderDesc
+	req := a.Request()
+	req.Header.SetMethod("GET")
+	req.SetRequestURI("http://" + a.accrualHost + "/api/orders/" + order)
+	if err := a.Parse(); err != nil {
+		a.log.Warnln("can't init accrual api")
+		return orderDesc, err
+	}
 	_, body, errs := a.Bytes()
 	if len(errs) > 0 {
 		return orderDesc, fmt.Errorf("%w: %w", domain.ErrGetAccrualOrders, errs)
