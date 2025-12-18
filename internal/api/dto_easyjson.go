@@ -342,7 +342,7 @@ func easyjson56de76c1DecodeGithubComEanhainGofermartInternalApi4(in *jlexer.Lexe
 		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		switch key {
-		case "number":
+		case "order":
 			if in.IsNull() {
 				in.Skip()
 			} else {
@@ -354,7 +354,7 @@ func easyjson56de76c1DecodeGithubComEanhainGofermartInternalApi4(in *jlexer.Lexe
 			} else {
 				out.Status = string(in.String())
 			}
-		case "accural":
+		case "accrual":
 			if in.IsNull() {
 				in.Skip()
 			} else {
@@ -383,7 +383,7 @@ func easyjson56de76c1EncodeGithubComEanhainGofermartInternalApi4(out *jwriter.Wr
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"number\":"
+		const prefix string = ",\"order\":"
 		out.RawString(prefix[1:])
 		out.String(string(in.Number))
 	}
@@ -393,11 +393,11 @@ func easyjson56de76c1EncodeGithubComEanhainGofermartInternalApi4(out *jwriter.Wr
 		out.String(string(in.Status))
 	}
 	if in.Accrual != 0 {
-		const prefix string = ",\"accural\":"
+		const prefix string = ",\"accrual\":"
 		out.RawString(prefix)
 		out.Float64(float64(in.Accrual))
 	}
-	{
+	if true {
 		const prefix string = ",\"uploaded_at\":"
 		out.RawString(prefix)
 		out.Raw((in.UploadedAt).MarshalJSON())

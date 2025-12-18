@@ -34,7 +34,7 @@ var (
 	InsertOrder = DMLUserStruct{
 		Name: "Insert user order",
 		DML: `INSERT INTO orders (ID, USER_ID, STATUS, ACCURAL)
-		VALUES ($1, $2, 'NEW', 0)`,
+		VALUES ($1, $2, $3, $4)`,
 	}
 	selectUserID = `
 		SELECT id FROM users 
@@ -192,8 +192,8 @@ func (ps *PersistStorage) GetUserID(ctx context.Context, username string) (int, 
 	return id, nil
 }
 
-func (ps *PersistStorage) InsertNewUserOrder(ctx context.Context, order string, userID int) error {
-	tag, err := ps.Exec(ctx, InsertOrder.DML, order, userID)
+func (ps *PersistStorage) InsertNewUserOrder(ctx context.Context, order string, userID int, status string, accrual float64) error {
+	tag, err := ps.Exec(ctx, InsertOrder.DML, order, userID, status, accrual)
 	if err != nil {
 		ps.log.Warnln("Can't insert user order", err)
 		return err

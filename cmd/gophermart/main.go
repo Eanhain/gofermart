@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+	"github.com/Eanhain/gofermart/internal/accrual"
 	flags "github.com/Eanhain/gofermart/internal/flags"
 	route "github.com/Eanhain/gofermart/internal/handlers"
 	logger "github.com/Eanhain/gofermart/internal/logger"
@@ -46,7 +47,12 @@ func main() {
 
 	defer pStore.Close()
 
-	serv, err := service.InitialService(ctx, pStore, log)
+	accrualAPI, err := accrual.InitialAccrualApi(ctx, flagsIn.AcAddr, log)
+	if err != nil {
+		log.Errorln("can't create accrual API instance", err)
+	}
+
+	serv, err := service.InitialService(ctx, pStore, accrualAPI, log)
 	if err != nil {
 		log.Errorln("can't create Service instance", err)
 	}

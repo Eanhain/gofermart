@@ -33,10 +33,10 @@ type User struct {
 // Для взаимодействия с системой доступен один хендлер:
 // GET /api/orders/{number} — получение информации о расчёте начислений баллов лояльности.
 type OrderDesc struct {
-	Number     string    `json:"number" db:"number"`
+	Number     string    `json:"order" db:"number"`
 	Status     string    `json:"status" db:"status"`
-	Accrual    float64   `json:"accural,omitempty" db:"accural"`
-	UploadedAt time.Time `json:"uploaded_at" db:"uploaded_at"`
+	Accrual    float64   `json:"accrual,omitempty" db:"accural"`
+	UploadedAt time.Time `json:"uploaded_at,omitempty" db:"uploaded_at"`
 }
 
 // Получение текущего баланса пользователя (отправка с сервера)

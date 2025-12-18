@@ -15,16 +15,17 @@ import (
 )
 
 type Service struct {
-	c   domain.Storage
-	log domain.Logger
+	c    domain.Storage
+	aAPI domain.AccrualAPI
+	log  domain.Logger
 }
 
 // TODO new service (whats service?)
-func InitialService(ctx context.Context, c domain.Storage, log domain.Logger) (*Service, error) {
+func InitialService(ctx context.Context, c domain.Storage, accrual domain.AccrualAPI, log domain.Logger) (*Service, error) {
 	if err := c.InitSchema(ctx, log); err != nil {
 		return nil, fmt.Errorf("couldn't initialize service layer: %w", err)
 	}
-	return &Service{c: c, log: log}, nil
+	return &Service{c: c, aAPI: accrual, log: log}, nil
 }
 
 func (s *Service) AuthUser(ctx context.Context, user dto.UserInput) (bool, error) {
@@ -59,6 +60,23 @@ func (s *Service) CheckUserOrderDubl(ctx context.Context, userID int, order stri
 }
 
 func (s *Service) PostUserOrder(ctx context.Context, username string, order string) error {
+	var (
+		status  string
+		accrual float64
+	)
+	orderDesc, err := s.aAPI.GetOrder(order)
+	if err != nil {
+		s.log.Warnln(err)
+	}
+	if orderDesc.Number != "" {
+		order = orderDesc.Number
+		if orderDesc.Status != "" {
+			status = orderDesc.Status
+		} else {
+			status = "NEW"
+		}
+		accrual = orderDesc.Accrual
+	}
 	id, err := s.c.GetUserID(ctx, username)
 	if err := s.CheckUserOrderDubl(ctx, id, order); err != nil {
 		return err
@@ -70,9 +88,10 @@ func (s *Service) PostUserOrder(ctx context.Context, username string, order stri
 		return err
 	}
 
-	if err := s.c.InsertNewUserOrder(ctx, order, id); err != nil {
+	if err := s.c.InsertNewUserOrder(ctx, order, id, status, accrual); err != nil {
 		return err
 	}
+
 	return nil
 }
 
