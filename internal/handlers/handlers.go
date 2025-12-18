@@ -11,6 +11,7 @@ import (
 	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/jinzhu/copier"
 )
 
 type app struct {
@@ -100,6 +101,7 @@ func (r *app) HandlerGetUserBalance(c *fiber.Ctx) error {
 }
 
 func (r *app) HandlerGetUserOrders(c *fiber.Ctx) error {
+	var ordersOut dto.OrdersDescOut
 	user := c.Locals("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 	username := claims["login"].(string)
@@ -108,8 +110,8 @@ func (r *app) HandlerGetUserOrders(c *fiber.Ctx) error {
 		r.logger.Warnln("Can't get order", err)
 		return err
 	}
-
-	if err := c.JSON(orders); err != nil {
+	copier.Copy(&ordersOut, orders)
+	if err := c.JSON(ordersOut); err != nil {
 		r.logger.Warnln("Can't get json", err)
 		return err
 	}

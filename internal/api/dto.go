@@ -39,6 +39,15 @@ type OrderDesc struct {
 	UploadedAt time.Time `json:"uploaded_at,omitempty" db:"uploaded_at"`
 }
 
+type OrderDescOut struct {
+	Number     string    `json:"number" db:"number"`
+	Status     string    `json:"status" db:"status"`
+	Accrual    float64   `json:"accrual,omitempty" db:"accural"`
+	UploadedAt time.Time `json:"uploaded_at,omitempty" db:"uploaded_at"`
+}
+
+type OrdersDescOut []OrderDescOut
+
 // Получение текущего баланса пользователя (отправка с сервера)
 // GET /api/user/balance
 type Amount struct {
