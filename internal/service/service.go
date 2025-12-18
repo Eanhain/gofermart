@@ -96,6 +96,7 @@ func (s *Service) PostUserOrder(ctx context.Context, username string, order stri
 }
 
 func (s *Service) CheckOrderByLuna(ctx context.Context, order string) (bool, error) {
+	s.log.Infoln(order)
 	orderInt, err := strconv.Atoi(order)
 	if err != nil {
 		return false, fmt.Errorf("can't convert order to int %w", err)
