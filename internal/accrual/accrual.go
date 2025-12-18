@@ -33,10 +33,12 @@ func (a AgentAPI) GetOrder(order string) (dto.OrderDesc, error) {
 	}
 	_, body, errs := a.Bytes()
 	if len(errs) > 0 {
-		return orderDesc, fmt.Errorf("%w: %w", domain.ErrGetAccrualOrders, errs)
+		return orderDesc, fmt.Errorf("%w: %w", domain.ErrGetAccrualOrders, errs[0])
 	}
 	if err := json.Unmarshal(body, &orderDesc); err != nil {
 		return orderDesc, fmt.Errorf("%w: %w", domain.ErrUnmarshalAccrualOrders, err)
 	}
+
+	a.log.Infoln(orderDesc)
 	return orderDesc, nil
 }
