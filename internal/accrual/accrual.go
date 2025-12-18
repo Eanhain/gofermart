@@ -27,7 +27,7 @@ func (a AgentAPI) GetOrder(order string) (dto.OrderDesc, error) {
 	req := a.Request()
 	req.Header.SetMethod("GET")
 	req.SetRequestURI(a.accrualHost + "/api/orders/" + order)
-	a.log.Infoln("http://" + a.accrualHost + "/api/orders/" + order)
+	a.log.Infoln(a.accrualHost + "/api/orders/" + order)
 	if err := a.Parse(); err != nil {
 		a.log.Warnln("can't init accrual api")
 		return orderDesc, err
@@ -36,8 +36,10 @@ func (a AgentAPI) GetOrder(order string) (dto.OrderDesc, error) {
 	if len(errs) > 0 {
 		return orderDesc, fmt.Errorf("%w: %w", domain.ErrGetAccrualOrders, errs[0])
 	}
-	if err := json.Unmarshal(body, &orderDesc); err != nil {
-		return orderDesc, fmt.Errorf("%w: %w", domain.ErrUnmarshalAccrualOrders, err)
+	if string(body[:]) != "" {
+		if err := json.Unmarshal(body, &orderDesc); err != nil {
+			return orderDesc, fmt.Errorf("%w: %w", domain.ErrUnmarshalAccrualOrders, err)
+		}
 	}
 
 	a.log.Infoln(orderDesc)

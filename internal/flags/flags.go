@@ -11,7 +11,7 @@ import (
 type ServerFlags struct {
 	Addr   string `short:"a" help:"Server addr" default:"localhost:8080" env:"RUN_ADDRESS"`
 	DdAddr string `short:"d" help:"Postgres connection addr" default:"postgres://db_user:s3cret@127.0.0.1/gofemart" env:"DATABASE_URI"`
-	AcAddr string `short:"r" help:"Accrual connection addr" default:"localhost:8081" env:"ACCRUAL_SYSTEM_ADDRESS"`
+	AcAddr string `short:"r" help:"Accrual connection addr" default:"http://localhost:8081" env:"ACCRUAL_SYSTEM_ADDRESS"`
 }
 
 func (sf *ServerFlags) Parse() {
