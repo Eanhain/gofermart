@@ -26,7 +26,7 @@ func (a AgentAPI) GetOrder(order string) (dto.OrderDesc, error) {
 	var orderDesc dto.OrderDesc
 	req := a.Request()
 	req.Header.SetMethod("GET")
-	req.SetRequestURI("http://" + a.accrualHost + "/api/orders/" + order)
+	req.SetRequestURI(a.accrualHost + "/api/orders/" + order)
 	a.log.Infoln("http://" + a.accrualHost + "/api/orders/" + order)
 	if err := a.Parse(); err != nil {
 		a.log.Warnln("can't init accrual api")
