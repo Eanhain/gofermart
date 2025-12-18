@@ -24,6 +24,7 @@ func InitialAccrualApi(ctx context.Context, accrualURL string, log domain.Logger
 
 func (a AgentAPI) GetOrder(order string) (dto.OrderDesc, error) {
 	var orderDesc dto.OrderDesc
+	var buf []byte
 	req := a.Request()
 	req.Header.SetMethod("GET")
 	req.SetRequestURI("http://" + a.accrualHost + "/api/orders/" + order)
@@ -31,11 +32,11 @@ func (a AgentAPI) GetOrder(order string) (dto.OrderDesc, error) {
 		a.log.Warnln("can't init accrual api")
 		return orderDesc, err
 	}
-	_, body, errs := a.Bytes()
-	if len(errs) > 0 {
-		return orderDesc, fmt.Errorf("%w: %w, %v", domain.ErrGetAccrualOrders, errs[0], body)
-	}
-	if err := json.Unmarshal(body, &orderDesc); err != nil {
+	a.Body(buf)
+	// if len(errs) > 0 {
+	// 	return orderDesc, fmt.Errorf("%w: %w", domain.ErrGetAccrualOrders, errs[0])
+	// }
+	if err := json.Unmarshal(buf, &orderDesc); err != nil {
 		return orderDesc, fmt.Errorf("%w: %w", domain.ErrUnmarshalAccrualOrders, err)
 	}
 
