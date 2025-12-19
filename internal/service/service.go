@@ -97,7 +97,7 @@ func (s *Service) PostUserOrder(ctx context.Context, username string, order stri
 	if err := s.c.InsertNewUserOrder(ctx, order, id, status, accrual); err != nil {
 		return err
 	}
-	if accrual != 0 {
+	if accrual != 0 && status == "PROCESSED" {
 		if err := s.c.UpdateUserBalance(ctx, id, accrual); err != nil {
 			return err
 		}
