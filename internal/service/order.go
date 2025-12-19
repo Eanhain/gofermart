@@ -45,9 +45,6 @@ func (s *Service) PostUserOrder(ctx context.Context, username string, order stri
 	if err := s.CheckUserOrderDubl(ctx, id, order); err != nil {
 		return err
 	}
-	if err != nil {
-		return nil
-	}
 	if _, err = s.CheckOrderByLuna(ctx, order); err != nil {
 		return err
 	}
