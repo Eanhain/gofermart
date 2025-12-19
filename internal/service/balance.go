@@ -50,7 +50,6 @@ func (s *Service) PostUserWithdrawOrder(ctx context.Context, username string, or
 }
 
 // TODO
-// func (s *Service) GetUserWithdrawals(ctx context.Context, username string) error {
-// 	err := s.c.RegisterUser(ctx, username)
-// 	return err
-// }
+func (s *Service) GetUserWithdrawals(ctx context.Context, username string) error {
+	return nil
+}
