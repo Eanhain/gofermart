@@ -46,14 +46,14 @@ type OrderDescOut struct {
 	UploadedAt time.Time `json:"uploaded_at,omitempty" db:"uploaded_at"`
 }
 
-type OrdersDescOut []OrderDescOut
-
 // Получение текущего баланса пользователя (отправка с сервера)
 // GET /api/user/balance
 type Amount struct {
 	Current   float64 `json:"current" db:"balance"`
 	Withdrawn float64 `json:"withdrawn" db:"withdrawn"`
 }
+
+type OrdersDescOut []OrderDescOut
 
 // Получение информации о выводе средств
 // GET /api/user/withdrawals.
