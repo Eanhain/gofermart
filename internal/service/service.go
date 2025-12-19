@@ -44,7 +44,13 @@ func (s *Service) RegUser(ctx context.Context, user dto.UserInput) error {
 
 	if errors.As(err, &pgErr) && pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
 		err = domain.ErrConflict
+		return err
 	}
+	id, err := s.c.GetUserID(ctx, user.Login)
+	if err != nil {
+		return err
+	}
+	s.c.InsertNewUserBalance(ctx, id, 0)
 
 	return err
 }
@@ -90,6 +96,9 @@ func (s *Service) PostUserOrder(ctx context.Context, username string, order stri
 
 	if err := s.c.InsertNewUserOrder(ctx, order, id, status, accrual); err != nil {
 		return err
+	}
+	if accrual != 0 {
+
 	}
 
 	return nil

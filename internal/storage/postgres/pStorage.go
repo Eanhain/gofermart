@@ -36,6 +36,12 @@ var (
 		DML: `INSERT INTO orders (ID, USER_ID, STATUS, ACCURAL)
 		VALUES ($1, $2, $3, $4)`,
 	}
+	InsertUserBalance = DMLUserStruct{
+		Name: "Insert user balance",
+		DML: `INSERT INTO balance (user_id, balance)
+		VALUES ($1, $2)`,
+	}
+
 	selectUserID = `
 		SELECT id FROM users 
 		WHERE USERNAME = $1
@@ -199,6 +205,17 @@ func (ps *PersistStorage) InsertNewUserOrder(ctx context.Context, order string, 
 		return err
 	}
 	ps.log.Infoln("Insert user order", tag)
+	return nil
+
+}
+
+func (ps *PersistStorage) InsertNewUserBalance(ctx context.Context, userID int, balance float64) error {
+	tag, err := ps.Exec(ctx, InsertUserBalance.DML, userID, balance)
+	if err != nil {
+		ps.log.Warnln("Can't insert user balance", err)
+		return err
+	}
+	ps.log.Infoln("Insert user balance", tag)
 	return nil
 
 }

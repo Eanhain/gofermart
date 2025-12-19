@@ -16,6 +16,7 @@ type Storage interface {
 	GetUserBalance(ctx context.Context, userID int) (dto.Amount, error)
 	CheckOrderNonExist(ctx context.Context, orders string) error
 	CheckUserOrderNonExist(ctx context.Context, userID int, orders string) error
+	InsertNewUserBalance(ctx context.Context, userID int, balance float64) error
 }
 
 type AccrualAPI interface {
