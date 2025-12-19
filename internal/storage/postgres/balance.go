@@ -16,15 +16,15 @@ var (
 	UpdateUserBalance = DMLUserStruct{
 		Name: "Update user balance",
 		DML: `UPDATE balance
-		SET balance = balance + $1
-		WHERE user_id = $2;`,
+		SET balance = balance + $2
+		WHERE user_id = $1;`,
 	}
 
 	UpdateUserWithdrawn = DMLUserStruct{
 		Name: "Update user withdrawn",
 		DML: `UPDATE balance
-		SET withdrawn = withdrawn + $1
-		WHERE user_id = $2;`,
+		SET withdrawn = withdrawn + $2
+		WHERE user_id = $1;`,
 	}
 
 	selectUserBalance = `
@@ -56,7 +56,7 @@ func (ps *PersistStorage) GetUserBalance(ctx context.Context, userID int) (dto.A
 }
 
 func (ps *PersistStorage) UpdateUserBalance(ctx context.Context, userID int, balance float64) error {
-	tag, err := ps.Exec(ctx, UpdateUserBalance.DML, userID)
+	tag, err := ps.Exec(ctx, UpdateUserBalance.DML, userID, balance)
 	if err != nil {
 		ps.log.Warnln("Can't update user balance", err)
 		return err
@@ -67,7 +67,7 @@ func (ps *PersistStorage) UpdateUserBalance(ctx context.Context, userID int, bal
 }
 
 func (ps *PersistStorage) UpdateUserWithdrawn(ctx context.Context, userID int, withdrawn float64) error {
-	tag, err := ps.Exec(ctx, UpdateUserWithdrawn.DML, userID)
+	tag, err := ps.Exec(ctx, UpdateUserWithdrawn.DML, userID, withdrawn)
 	if err != nil {
 		ps.log.Warnln("Can't update user withdrawn", err)
 		return err
