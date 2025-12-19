@@ -90,5 +90,4 @@ func (ps *PersistStorage) GetUserOrdersWithdrawn(ctx context.Context, userID int
 
 	ps.log.Infoln("Get user orders", orders)
 	return orders, nil
-
 }
