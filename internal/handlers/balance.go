@@ -41,7 +41,8 @@ func (r *app) HandlersUserBalanceWithdraw(c *fiber.Ctx) error {
 		return fiber.ErrPaymentRequired
 	} else if errors.Is(err, domain.ErrOrderInvalid) {
 		return fiber.ErrUnprocessableEntity
-	} else {
-		return nil
+	} else if err != nil {
+		return fiber.ErrInternalServerError
 	}
+	return nil
 }

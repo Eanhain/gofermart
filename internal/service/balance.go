@@ -20,11 +20,19 @@ func (s *Service) GetUserBalance(ctx context.Context, username string) (dto.Amou
 }
 
 func (s *Service) PostUserWithdrawOrder(ctx context.Context, username string, order dto.Withdrawn) error {
+
 	userID, err := s.c.GetUserID(ctx, username)
 	if err != nil {
 		return err
 	}
+	if err := s.CheckUserOrderDubl(ctx, userID, order.Order); err != nil {
+		return err
+	}
 	if _, err = s.CheckOrderByLuna(ctx, order.Order); err != nil {
+		return err
+	}
+
+	if err := s.c.InsertNewUserOrder(ctx, order.Order, userID, "NEW", 0); err != nil {
 		return err
 	}
 	amount, err := s.c.GetUserBalance(ctx, userID)
@@ -46,6 +54,7 @@ func (s *Service) PostUserWithdrawOrder(ctx context.Context, username string, or
 		s.log.Warnln("can't insert user withdrawn", username, amount, order)
 		return err
 	}
+
 	return err
 }
 

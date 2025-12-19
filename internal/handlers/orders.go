@@ -48,3 +48,21 @@ func (r *app) HandlerPushOrder(c *fiber.Ctx) error {
 	c.SendStatus(fiber.StatusAccepted)
 	return nil
 }
+
+func (r *app) HandlersWithdrawals(c *fiber.Ctx) error {
+	var ordersOut dto.OrdersDescOut
+	user := c.Locals("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	username := claims["login"].(string)
+	orders, err := r.service.GetUserOrders(context.TODO(), username)
+	if err != nil {
+		r.logger.Warnln("Can't get order", err)
+		return err
+	}
+	copier.Copy(&ordersOut, orders)
+	if err := c.JSON(ordersOut); err != nil {
+		r.logger.Warnln("Can't get json", err)
+		return err
+	}
+	return nil
+}

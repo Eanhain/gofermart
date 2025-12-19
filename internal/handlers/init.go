@@ -35,6 +35,7 @@ func (r *app) CreateHandlers(ctx context.Context) error {
 	r.Get("/api/user/orders", r.HandlerGetUserOrders)
 	r.Get("/api/user/balance", r.HandlerGetUserBalance)
 	r.Post("/api/user/balance/withdraw", r.HandlersUserBalanceWithdraw)
+	r.Get("/api/user/withdrawals", r.HandlersWithdrawals)
 	err := r.Listen(r.server)
 	return err
 }
