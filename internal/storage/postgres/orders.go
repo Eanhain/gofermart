@@ -7,6 +7,39 @@ import (
 	domain "github.com/Eanhain/gofermart/internal/domain"
 )
 
+var (
+	selectUserOrder = `
+		select ID as number 
+		from orders 
+		where user_id = $1 and id = $2;
+	`
+	selectOrder = `
+		select ID as number 
+		from orders 
+		where id = $1;
+	`
+	selectWithdrawnUserOrders = `
+		select order_id as order, sum, UPLOADED_AT as processed_at from withdraw_orders
+		where user_id = $1
+		order by processed_at desc
+	`
+	selectUserOrders = `
+		select ID as number, status, accural accrual, uploaded_at 
+		from orders 
+		where user_id = $1;
+	`
+	InsertOrder = DMLUserStruct{
+		Name: "Insert user order",
+		DML: `INSERT INTO orders (ID, USER_ID, STATUS, ACCURAL)
+		VALUES ($1, $2, $3, $4)`,
+	}
+	InsertOrderWithdrawn = DMLUserStruct{
+		Name: "Insert user withdrawn order",
+		DML: `INSERT INTO withdraw_orders (user_id, order_id, sum)
+		VALUES ($1, $2, $3)`,
+	}
+)
+
 func (ps *PersistStorage) InsertNewUserOrder(ctx context.Context, order string, userID int, status string, accrual float64) error {
 	tag, err := ps.Exec(ctx, InsertOrder.DML, order, userID, status, accrual)
 	if err != nil {

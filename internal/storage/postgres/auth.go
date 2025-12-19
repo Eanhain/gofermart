@@ -8,6 +8,22 @@ import (
 	pgx "github.com/jackc/pgx/v5"
 )
 
+var (
+	selectUser = `
+		SELECT username,hash FROM users
+		WHERE USERNAME = $1
+	`
+	selectUserID = `
+		SELECT id FROM users 
+		WHERE USERNAME = $1
+	`
+	InsertUser = DMLUserStruct{
+		Name: "Add Users (batch)",
+		DML: ` INSERT INTO users (username, hash) 
+		VALUES ($1, $2)`,
+	}
+)
+
 func (ps *PersistStorage) RegisterUser(ctx context.Context, user dto.User) error {
 	tx, err := ps.BeginTx(ctx, pgx.TxOptions{})
 	defer tx.Rollback(ctx)
