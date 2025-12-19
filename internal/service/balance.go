@@ -57,8 +57,3 @@ func (s *Service) PostUserWithdrawOrder(ctx context.Context, username string, or
 
 	return err
 }
-
-// TODO
-func (s *Service) GetUserWithdrawals(ctx context.Context, username dto.User) error {
-	return nil
-}

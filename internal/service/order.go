@@ -88,3 +88,15 @@ func (s *Service) GetUserOrders(ctx context.Context, username string) (dto.Order
 	}
 	return orders, nil
 }
+
+func (s *Service) GetUserWithdrawals(ctx context.Context, username string) (dto.Withdrawns, error) {
+	id, err := s.c.GetUserID(ctx, username)
+	if err != nil {
+		return dto.Withdrawns{}, err
+	}
+	orders, err := s.c.GetUserOrdersWithdrawn(ctx, id)
+	if err != nil {
+		return dto.Withdrawns{}, err
+	}
+	return orders, nil
+}
