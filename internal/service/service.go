@@ -98,7 +98,9 @@ func (s *Service) PostUserOrder(ctx context.Context, username string, order stri
 		return err
 	}
 	if accrual != 0 {
-
+		if err := s.c.UpdateUserBalance(ctx, id, accrual); err != nil {
+			return err
+		}
 	}
 
 	return nil
