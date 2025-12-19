@@ -36,7 +36,6 @@ func (r *app) StartServer(ctx context.Context) error {
 func (r *app) CreateHandlers(ctx context.Context) error {
 	r.Post("/api/user/register", r.HandlerRegUser)
 	r.Post("/api/user/login", r.LoginJWT)
-	// r.Use()
 	r.Use(jwtware.New(r.jwtConf))
 	r.Post("/api/user/orders", r.HandlerPushOrder)
 	r.Get("/api/user/orders", r.HandlerGetUserOrders)

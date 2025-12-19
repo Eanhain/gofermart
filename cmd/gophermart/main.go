@@ -47,7 +47,7 @@ func main() {
 
 	defer pStore.Close()
 
-	accrualAPI, err := accrual.InitialAccrualApi(ctx, flagsIn.AcAddr, log)
+	accrualAPI, err := accrual.InitialAccrualAPI(ctx, flagsIn.AcAddr, log)
 	if err != nil {
 		log.Errorln("can't create accrual API instance", err)
 	}

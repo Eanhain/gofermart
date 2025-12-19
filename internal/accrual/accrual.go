@@ -16,7 +16,7 @@ type AgentAPI struct {
 	log         domain.Logger
 }
 
-func InitialAccrualApi(ctx context.Context, accrualURL string, log domain.Logger) (*AgentAPI, error) {
+func InitialAccrualAPI(ctx context.Context, accrualURL string, log domain.Logger) (*AgentAPI, error) {
 	agent := fiber.AcquireAgent()
 
 	return &AgentAPI{agent, accrualURL, log}, nil
