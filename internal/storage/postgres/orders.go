@@ -51,8 +51,8 @@ func (ps *PersistStorage) InsertNewUserOrder(ctx context.Context, order string, 
 
 }
 
-func (ps *PersistStorage) InsertOrderWithdrawn(ctx context.Context, userID int, orderID string, sum float64) error {
-	tag, err := ps.Exec(ctx, InsertOrderWithdrawn.DML, userID, orderID, sum)
+func (ps *PersistStorage) InsertOrderWithdrawn(ctx context.Context, userID int, order dto.Withdrawn) error {
+	tag, err := ps.Exec(ctx, InsertOrderWithdrawn.DML, userID, order.Order, order.Sum)
 	if err != nil {
 		ps.log.Warnln("Can't insert user withdrawn order", err)
 		return err

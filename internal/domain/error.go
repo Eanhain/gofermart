@@ -14,4 +14,5 @@ var (
 	ErrOrderInvalid           = errors.New("order is not valid")
 	ErrGetAccrualOrders       = errors.New("can't get accrual orders")
 	ErrUnmarshalAccrualOrders = errors.New("can't get unmarshal accrual orders to json")
+	ErrBalanceWithdrawn       = errors.New("not enough bonuses on balance")
 )

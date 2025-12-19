@@ -14,7 +14,7 @@ type Storage interface {
 	GetUserID(ctx context.Context, user string) (int, error)
 
 	InsertNewUserOrder(ctx context.Context, order string, userID int, status string, accrual float64) error
-	InsertOrderWithdrawn(ctx context.Context, userID int, orderID string, sum float64) error
+	InsertOrderWithdrawn(ctx context.Context, userID int, order dto.Withdrawn) error
 	CheckUserOrderNonExist(ctx context.Context, userID int, orders string) error
 	GetUserOrders(ctx context.Context, userID int) (dto.OrdersDesc, error)
 	CheckOrderNonExist(ctx context.Context, orders string) error
