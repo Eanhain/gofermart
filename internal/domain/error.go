@@ -16,4 +16,5 @@ var (
 	ErrUnmarshalAccrualOrders = errors.New("can't get unmarshal accrual orders to json")
 	ErrBalanceWithdrawn       = errors.New("not enough bonuses on balance")
 	ErrRequestCount           = errors.New("no more than N requests per minute allowed on accural service, try later")
+	ErrEmptyOrdersList        = errors.New("order list is empty")
 )

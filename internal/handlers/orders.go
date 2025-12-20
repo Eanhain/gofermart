@@ -55,7 +55,10 @@ func (r *app) HandlersWithdrawals(c *fiber.Ctx) error {
 	claims := user.Claims.(jwt.MapClaims)
 	username := claims["login"].(string)
 	orders, err := r.service.GetUserWithdrawals(c.Context(), username)
-	if err != nil {
+	if errors.Is(err, domain.ErrEmptyOrdersList) {
+		c.SendStatus(fiber.StatusNoContent)
+		return nil
+	} else if err != nil {
 		r.logger.Warnln("Can't get order", err)
 		return err
 	}

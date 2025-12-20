@@ -99,5 +99,8 @@ func (s *Service) GetUserWithdrawals(ctx context.Context, username string) (dto.
 	if err != nil {
 		return dto.Withdrawns{}, err
 	}
+	if len(orders) == 0 {
+		return dto.Withdrawns{}, domain.ErrEmptyOrdersList
+	}
 	return orders, nil
 }
