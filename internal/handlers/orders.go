@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"errors"
 
 	dto "github.com/Eanhain/gofermart/internal/api"
@@ -16,7 +15,7 @@ func (r *app) HandlerGetUserOrders(c *fiber.Ctx) error {
 	user := c.Locals("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 	username := claims["login"].(string)
-	orders, err := r.service.GetUserOrders(context.TODO(), username)
+	orders, err := r.service.GetUserOrders(c.Context(), username)
 	if err != nil {
 		r.logger.Warnln("Can't get order", err)
 		return err
@@ -35,13 +34,15 @@ func (r *app) HandlerPushOrder(c *fiber.Ctx) error {
 	username := claims["login"].(string)
 	order := c.Body()
 	orderStr := string(order)
-	if err := r.service.PostUserOrder(context.TODO(), username, orderStr); err != nil {
+	if err := r.service.PostUserOrder(c.Context(), username, orderStr); err != nil {
 		if errors.Is(err, domain.ErrOrderExistWrongUser) {
 			return fiber.ErrConflict
 		} else if errors.Is(err, domain.ErrOrderExist) {
 			return nil
 		} else if errors.Is(err, domain.ErrOrderInvalid) {
 			return fiber.ErrUnprocessableEntity
+		} else if errors.Is(err, domain.ErrRequestCount) {
+			return errors.Join(fiber.ErrTooManyRequests, err)
 		}
 		return fiber.ErrInternalServerError
 	}
@@ -53,7 +54,7 @@ func (r *app) HandlersWithdrawals(c *fiber.Ctx) error {
 	user := c.Locals("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 	username := claims["login"].(string)
-	orders, err := r.service.GetUserWithdrawals(context.TODO(), username)
+	orders, err := r.service.GetUserWithdrawals(c.Context(), username)
 	if err != nil {
 		r.logger.Warnln("Can't get order", err)
 		return err

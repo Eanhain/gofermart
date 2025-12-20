@@ -32,7 +32,10 @@ func (a AgentAPI) GetOrder(order string) (dto.OrderDesc, error) {
 		a.log.Warnln("can't init accrual api")
 		return orderDesc, err
 	}
-	_, body, errs := a.Bytes()
+	status, body, errs := a.Bytes()
+	if status == 429 {
+		return orderDesc, domain.ErrRequestCount
+	}
 	if len(errs) > 0 {
 		return orderDesc, fmt.Errorf("%w: %w", domain.ErrGetAccrualOrders, errs[0])
 	}

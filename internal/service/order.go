@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -26,7 +27,10 @@ func (s *Service) PostUserOrder(ctx context.Context, username string, order stri
 		accrual float64
 	)
 	orderDesc, err := s.aAPI.GetOrder(order)
-	if err != nil {
+	if errors.Is(err, domain.ErrRequestCount) {
+		s.log.Warnln(err)
+		return err
+	} else if err != nil {
 		s.log.Warnln(err)
 	}
 	if orderDesc.Number != "" {

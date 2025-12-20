@@ -56,7 +56,7 @@ func (r *app) HandlerRegUser(c *fiber.Ctx) error {
 		r.logger.Warnln("can't parse body for registr", err)
 		return fiber.ErrInternalServerError
 	}
-	if err := r.service.RegUser(context.TODO(), user); err != nil {
+	if err := r.service.RegUser(c.Context(), user); err != nil {
 		if errors.Is(err, domain.ErrConflict) {
 			return fiber.ErrConflict
 		} else {
@@ -64,7 +64,7 @@ func (r *app) HandlerRegUser(c *fiber.Ctx) error {
 		}
 	}
 	r.service.AuthUser(context.TODO(), user)
-	if ok, err := r.service.AuthUser(context.TODO(), user); err != nil || !ok {
+	if ok, err := r.service.AuthUser(c.Context(), user); err != nil || !ok {
 		r.logger.Warnln("Can't auth user: ", err)
 		return fiber.ErrBadRequest
 	}
@@ -86,7 +86,7 @@ func (r *app) AuthUser(c *fiber.Ctx) (string, error) {
 		r.logger.Warnln("can't parse body for registr", err)
 		return "", err
 	}
-	if ok, err := r.service.AuthUser(context.TODO(), user); err != nil || !ok {
+	if ok, err := r.service.AuthUser(c.Context(), user); err != nil || !ok {
 		return "", fmt.Errorf("user not auth %v", user.Login)
 	}
 	return user.Login, nil
