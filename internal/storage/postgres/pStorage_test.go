@@ -7,14 +7,13 @@ import (
 	dto "github.com/Eanhain/gofermart/internal/api"
 	domain "github.com/Eanhain/gofermart/internal/domain"
 	logger "github.com/Eanhain/gofermart/internal/logger"
-	"github.com/jackc/pgx/v5"
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/pashagolub/pgxmock/v4"
 )
 
-// func Test
 func TestConnectToPersistStorage(t *testing.T) {
-	logger := logger.InitialLogger()
+	log := logger.InitialLogger()
 	tests := []struct {
 		name    string
 		ctx     context.Context
@@ -24,7 +23,7 @@ func TestConnectToPersistStorage(t *testing.T) {
 		{
 			name:    "OK",
 			ctx:     context.Background(),
-			log:     logger,
+			log:     log,
 			wantErr: nil,
 		},
 	}
@@ -34,14 +33,22 @@ func TestConnectToPersistStorage(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Cannot create mock %v", err)
 			}
-			psInst := PersistStorage{mock, tt.log}
+
+			psInst := PersistStorage{
+				PgxIface: mock,
+				log:      tt.log,
+				psql:     sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
+			}
+
 			defer psInst.Close()
+
 			mock.ExpectBegin()
 			ddls := []string{ddlUsers, ddlOrders, ddlBalance}
 			for _, ddl := range ddls {
 				mock.ExpectExec(ddl).WillReturnResult(pgconn.NewCommandTag("CREATE TABLE"))
 			}
 			mock.ExpectCommit()
+
 			if err = psInst.InitSchema(tt.ctx, tt.log); err != tt.wantErr {
 				t.Fatalf("ConnectToPersistStorage() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -50,7 +57,7 @@ func TestConnectToPersistStorage(t *testing.T) {
 }
 
 func TestCheckUser(t *testing.T) {
-	logger := logger.InitialLogger()
+	log := logger.InitialLogger()
 	tests := []struct {
 		name    string
 		ctx     context.Context
@@ -61,7 +68,7 @@ func TestCheckUser(t *testing.T) {
 		{
 			name: "OK",
 			ctx:  context.Background(),
-			log:  logger,
+			log:  log,
 			user: dto.UserInput{
 				Login:    "test",
 				Password: "passw",
@@ -75,11 +82,20 @@ func TestCheckUser(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Cannot create mock %v", err)
 			}
-			psInst := PersistStorage{mock, tt.log}
 
+			psInst := PersistStorage{
+				PgxIface: mock,
+				log:      tt.log,
+				psql:     sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
+			}
 			defer psInst.Close()
+
 			rows := pgxmock.NewRows([]string{"username", "hash"}).AddRow("test", "hash2")
-			mock.ExpectQuery(selectUser).WithArgs(tt.user.Login).WillReturnRows(rows)
+
+			expectedSQL := "SELECT username, hash FROM users WHERE username = $1"
+
+			mock.ExpectQuery(expectedSQL).WithArgs(tt.user.Login).WillReturnRows(rows)
+
 			if _, err := psInst.CheckUser(tt.ctx, tt.user); err != tt.wantErr {
 				t.Fatalf("CheckUser() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -88,7 +104,7 @@ func TestCheckUser(t *testing.T) {
 }
 
 func TestRegisterUser(t *testing.T) {
-	logger := logger.InitialLogger()
+	log := logger.InitialLogger()
 	tests := []struct {
 		name    string
 		ctx     context.Context
@@ -99,7 +115,7 @@ func TestRegisterUser(t *testing.T) {
 		{
 			name: "OK",
 			ctx:  context.Background(),
-			log:  logger,
+			log:  log,
 			user: dto.User{
 				Login: "test",
 				Hash:  "hash1",
@@ -113,17 +129,27 @@ func TestRegisterUser(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Cannot create mock %v", err)
 			}
-			psInst := PersistStorage{mock, tt.log}
-			mock.ExpectBeginTx(pgx.TxOptions{})
-			mock.ExpectPrepare(InsertUser.Name, InsertUser.DML)
-			connCommand := pgconn.NewCommandTag("INSERT")
-			mockBatch := mock.ExpectBatch()
-			mockBatch.ExpectExec(InsertUser.Name).WithArgs(tt.user.Login, tt.user.Hash).WillReturnResult(connCommand)
-			mock.ExpectCommit()
+
+			psInst := PersistStorage{
+				PgxIface: mock,
+				log:      tt.log,
+				psql:     sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
+			}
 			defer psInst.Close()
 
+			connCommand := pgconn.NewCommandTag("INSERT 0 1")
+			expectedSQL := "INSERT INTO users (username, hash) VALUES ($1, $2)"
+
+			mock.ExpectExec(expectedSQL).
+				WithArgs(tt.user.Login, tt.user.Hash).
+				WillReturnResult(connCommand)
+
 			if err := psInst.RegisterUser(tt.ctx, tt.user); err != tt.wantErr {
-				t.Fatalf("CheckUser() error = %v, wantErr %v", err, tt.wantErr)
+				t.Fatalf("RegisterUser() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
 	}

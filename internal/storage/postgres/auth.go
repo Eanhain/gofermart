@@ -5,63 +5,43 @@ import (
 	"fmt"
 
 	dto "github.com/Eanhain/gofermart/internal/api"
-	pgx "github.com/jackc/pgx/v5"
-)
-
-var (
-	selectUser = `
-		SELECT username,hash FROM users
-		WHERE USERNAME = $1
-	`
-	selectUserID = `
-		SELECT id FROM users 
-		WHERE USERNAME = $1
-	`
-	InsertUser = DMLUserStruct{
-		Name: "Add Users (batch)",
-		DML: ` INSERT INTO users (username, hash) 
-		VALUES ($1, $2)`,
-	}
+	sq "github.com/Masterminds/squirrel"
 )
 
 func (ps *PersistStorage) RegisterUser(ctx context.Context, user dto.User) error {
-	tx, err := ps.BeginTx(ctx, pgx.TxOptions{})
-	defer tx.Rollback(ctx)
+	sql, args, err := ps.psql.
+		Insert("users").
+		Columns("username", "hash").
+		Values(user.Login, user.Hash).
+		ToSql()
+
 	if err != nil {
-		return fmt.Errorf("can't register user (transaction start) %w", err)
+		return fmt.Errorf("failed to build sql: %w", err)
 	}
-	prepareState, err := tx.Prepare(ctx, InsertUser.Name, InsertUser.DML)
+
+	tag, err := ps.Exec(ctx, sql, args...)
 	if err != nil {
-		return fmt.Errorf("can't prepare statement %w", err)
+		return fmt.Errorf("can't register user %w, with user %v", err, user.Login)
 	}
 
-	batch := &pgx.Batch{}
-
-	batch.Queue(prepareState.Name, user.Login, user.Hash)
-
-	res := tx.SendBatch(ctx, batch)
-	ct, err := res.Exec()
-	if err != nil {
-		return fmt.Errorf("error with sending batch data %w, with user %v", err, user)
-	}
-
-	res.Close()
-
-	if err := tx.Commit(ctx); err != nil {
-		ps.log.Warnln("cannot commit register tx", err)
-		return err
-	}
-
-	ps.log.Infoln("batch data was sending, rows:", ct.RowsAffected(), "for user:", user.Login)
-
+	ps.log.Infoln("User registered, rows affected:", tag.RowsAffected(), "user:", user.Login)
 	return nil
 }
 
 func (ps *PersistStorage) CheckUser(ctx context.Context, untrustedUser dto.UserInput) (dto.User, error) {
 	var orUser dto.User
 
-	row := ps.QueryRow(ctx, selectUser, untrustedUser.Login)
+	sql, args, err := ps.psql.
+		Select("username", "hash").
+		From("users").
+		Where(sq.Eq{"username": untrustedUser.Login}).
+		ToSql()
 
+	if err != nil {
+		return dto.User{}, fmt.Errorf("failed to build sql: %w", err)
+	}
+
+	row := ps.QueryRow(ctx, sql, args...)
 	if err := row.Scan(&orUser.Login, &orUser.Hash); err != nil {
 		return dto.User{}, err
 	}
@@ -72,7 +52,18 @@ func (ps *PersistStorage) CheckUser(ctx context.Context, untrustedUser dto.UserI
 
 func (ps *PersistStorage) GetUserID(ctx context.Context, username string) (int, error) {
 	var id int
-	row := ps.QueryRow(ctx, selectUserID, username)
+
+	sql, args, err := ps.psql.
+		Select("id").
+		From("users").
+		Where(sq.Eq{"username": username}).
+		ToSql()
+
+	if err != nil {
+		return -1, fmt.Errorf("failed to build sql: %w", err)
+	}
+
+	row := ps.QueryRow(ctx, sql, args...)
 	if err := row.Scan(&id); err != nil {
 		return -1, err
 	}
