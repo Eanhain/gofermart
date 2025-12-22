@@ -8,14 +8,20 @@ import (
 )
 
 type Service struct {
-	storage domain.Storage
+	auth    domain.Auth
+	balance domain.Balance
+	orders  domain.Orders
+	migr    domain.Migration
 	aAPI    domain.AccrualAPI
 	log     domain.Logger
 }
 
-func InitialService(ctx context.Context, storage domain.Storage, accrual domain.AccrualAPI, log domain.Logger) (*Service, error) {
-	if err := storage.InitSchema(ctx, log); err != nil {
+func InitialService(ctx context.Context, auth domain.Auth, balance domain.Balance, orders domain.Orders,
+	migr domain.Migration, accrual domain.AccrualAPI, log domain.Logger) (*Service, error) {
+	if err := migr.InitSchema(ctx, log); err != nil {
 		return nil, fmt.Errorf("couldn't initialize service layer: %w", err)
 	}
-	return &Service{storage: storage, aAPI: accrual, log: log}, nil
+	return &Service{auth: auth, balance: balance,
+		orders: orders, migr: migr,
+		aAPI: accrual, log: log}, nil
 }

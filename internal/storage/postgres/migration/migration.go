@@ -1,13 +1,13 @@
-package postgres
+package migration
 
 import (
 	"context"
 	"fmt"
 
 	domain "github.com/Eanhain/gofermart/internal/domain"
+	entity "github.com/Eanhain/gofermart/internal/storage/entity"
 	sq "github.com/Masterminds/squirrel"
 	pgx "github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	pgxpool "github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -45,42 +45,19 @@ const (
 	)`
 )
 
-type PgxIface interface {
-	Begin(context.Context) (pgx.Tx, error)
-	BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
-	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
-	Exec(ctx context.Context, sql string, arguments ...any) (commandTag pgconn.CommandTag, err error)
-	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
-	Close()
-}
-
-type DMLUserStruct struct {
-	DML  string
-	Name string
-}
-
-type PersistStorage struct {
-	PgxIface
+type Migration struct {
+	entity.PgxIface
 	log  domain.Logger
 	psql sq.StatementBuilderType
 }
 
-// TODO Migration
-// sql-c?
-
-// select for update -> coins
-func InitialPersistStorage(ctx context.Context, log domain.Logger, connString string) (*PersistStorage, error) {
-	pgxPool, err := pgxpool.New(ctx, connString)
-	if err != nil {
-		return nil, fmt.Errorf("unable to connect db %w", err)
-	}
+func InitialMigration(ctx context.Context, log domain.Logger, pgxPool *pgxpool.Pool) (*Migration, error) {
 	psql := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
-
-	PersistStorageInstance := &PersistStorage{pgxPool, log, psql}
-	return PersistStorageInstance, nil
+	MigrationInstance := &Migration{pgxPool, log, psql}
+	return MigrationInstance, nil
 }
 
-func (ps *PersistStorage) InitSchema(ctx context.Context, log domain.Logger) error {
+func (ps *Migration) InitSchema(ctx context.Context, log domain.Logger) error {
 	ddls := []string{ddlUsers, ddlOrders, ddlBalance, ddlWithdrawOrders}
 	tx, err := ps.BeginTx(ctx, pgx.TxOptions{})
 	defer tx.Rollback(ctx)

@@ -1,13 +1,28 @@
-package postgres
+package balance
 
 import (
 	"context"
 
 	dto "github.com/Eanhain/gofermart/internal/api"
+	"github.com/Eanhain/gofermart/internal/domain"
+	entity "github.com/Eanhain/gofermart/internal/storage/entity"
 	sq "github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func (ps *PersistStorage) InsertNewUserBalance(ctx context.Context, userID int, balance float64) error {
+type Balance struct {
+	entity.PgxIface
+	log  domain.Logger
+	psql sq.StatementBuilderType
+}
+
+func InitialBalance(ctx context.Context, log domain.Logger, pgxPool *pgxpool.Pool) (*Balance, error) {
+	psql := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
+	MigrationInstance := &Balance{pgxPool, log, psql}
+	return MigrationInstance, nil
+}
+
+func (ps *Balance) InsertNewUserBalance(ctx context.Context, userID int, balance float64) error {
 	sql, args, err := ps.psql.
 		Insert("balance").
 		Columns("user_id", "balance", "withdrawn").
@@ -26,7 +41,7 @@ func (ps *PersistStorage) InsertNewUserBalance(ctx context.Context, userID int, 
 	return nil
 }
 
-func (ps *PersistStorage) GetUserBalance(ctx context.Context, userID int) (dto.Amount, error) {
+func (ps *Balance) GetUserBalance(ctx context.Context, userID int) (dto.Amount, error) {
 	var balance dto.Amount
 
 	sql, args, err := ps.psql.
@@ -45,7 +60,7 @@ func (ps *PersistStorage) GetUserBalance(ctx context.Context, userID int) (dto.A
 	return balance, nil
 }
 
-func (ps *PersistStorage) UpdateUserBalance(ctx context.Context, userID int, amount float64) error {
+func (ps *Balance) UpdateUserBalance(ctx context.Context, userID int, amount float64) error {
 	sql, args, err := ps.psql.
 		Update("balance").
 		Set("balance", sq.Expr("balance + ?", amount)).
@@ -64,7 +79,7 @@ func (ps *PersistStorage) UpdateUserBalance(ctx context.Context, userID int, amo
 	return nil
 }
 
-func (ps *PersistStorage) UpdateUserWithdrawn(ctx context.Context, userID int, amount float64) error {
+func (ps *Balance) UpdateUserWithdrawn(ctx context.Context, userID int, amount float64) error {
 	sql, args, err := ps.psql.
 		Update("balance").
 		Set("withdrawn", sq.Expr("withdrawn + ?", amount)).

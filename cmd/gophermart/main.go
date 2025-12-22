@@ -8,7 +8,11 @@ import (
 	route "github.com/Eanhain/gofermart/internal/handlers"
 	logger "github.com/Eanhain/gofermart/internal/logger"
 	"github.com/Eanhain/gofermart/internal/service"
-	store "github.com/Eanhain/gofermart/internal/storage/postgres"
+	auth "github.com/Eanhain/gofermart/internal/storage/postgres/auth"
+	balance "github.com/Eanhain/gofermart/internal/storage/postgres/balance"
+	migr "github.com/Eanhain/gofermart/internal/storage/postgres/migration"
+	orders "github.com/Eanhain/gofermart/internal/storage/postgres/orders"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func flagsInitalize(log *logger.Logger) (flags.ServerFlags, error) {
@@ -37,22 +41,41 @@ func main() {
 		log.Warnln(err)
 	}
 
-	pStore, err := store.InitialPersistStorage(ctx,
-		log,
-		flagsIn.GetDBConnStr())
-
+	pgxPool, err := pgxpool.New(ctx, flagsIn.GetDBConnStr())
 	if err != nil {
 		log.Errorln("can't create db instance", err)
 	}
 
-	defer pStore.Close()
+	migrStore, err := migr.InitialMigration(ctx, log, pgxPool)
+	if err != nil {
+		log.Errorln("can't create db migration api", err)
+	}
+	defer migrStore.Close()
+
+	authStore, err := auth.InitialAuth(ctx, log, pgxPool)
+	if err != nil {
+		log.Errorln("can't create db auth api", err)
+	}
+	defer authStore.Close()
+
+	balanceStore, err := balance.InitialBalance(ctx, log, pgxPool)
+	if err != nil {
+		log.Errorln("can't create db balance api", err)
+	}
+	defer balanceStore.Close()
+
+	ordersStore, err := orders.InitialOrders(ctx, log, pgxPool)
+	if err != nil {
+		log.Errorln("can't create db orders api", err)
+	}
+	defer ordersStore.Close()
 
 	accrualAPI, err := accrual.InitialAccrualAPI(ctx, flagsIn.AcAddr, log)
 	if err != nil {
 		log.Errorln("can't create accrual API instance", err)
 	}
 
-	serv, err := service.InitialService(ctx, pStore, accrualAPI, log)
+	serv, err := service.InitialService(ctx, authStore, balanceStore, ordersStore, migrStore, accrualAPI, log)
 	if err != nil {
 		log.Errorln("can't create Service instance", err)
 	}

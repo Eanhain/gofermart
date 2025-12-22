@@ -6,11 +6,25 @@ import (
 
 	dto "github.com/Eanhain/gofermart/internal/api"
 	domain "github.com/Eanhain/gofermart/internal/domain"
+	entity "github.com/Eanhain/gofermart/internal/storage/entity"
 	sq "github.com/Masterminds/squirrel"
 	pgx "github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func (ps *PersistStorage) InsertNewUserOrder(ctx context.Context, order string, userID int, status string, accrual float64) error {
+type Orders struct {
+	entity.PgxIface
+	log  domain.Logger
+	psql sq.StatementBuilderType
+}
+
+func InitialOrders(ctx context.Context, log domain.Logger, pgxPool *pgxpool.Pool) (*Orders, error) {
+	psql := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
+	MigrationInstance := &Orders{pgxPool, log, psql}
+	return MigrationInstance, nil
+}
+
+func (ps *Orders) InsertNewUserOrder(ctx context.Context, order string, userID int, status string, accrual float64) error {
 	sql, args, err := ps.psql.
 		Insert("orders").
 		Columns("id", "user_id", "status", "accural").
@@ -29,7 +43,7 @@ func (ps *PersistStorage) InsertNewUserOrder(ctx context.Context, order string, 
 	return nil
 }
 
-func (ps *PersistStorage) InsertOrderWithdrawn(ctx context.Context, userID int, order dto.Withdrawn) error {
+func (ps *Orders) InsertOrderWithdrawn(ctx context.Context, userID int, order dto.Withdrawn) error {
 	sql, args, err := ps.psql.
 		Insert("withdraw_orders").
 		Columns("user_id", "order_id", "sum").
@@ -48,7 +62,7 @@ func (ps *PersistStorage) InsertOrderWithdrawn(ctx context.Context, userID int, 
 	return nil
 }
 
-func (ps *PersistStorage) CheckUserOrderNonExist(ctx context.Context, userID int, orderID string) error {
+func (ps *Orders) CheckUserOrderNonExist(ctx context.Context, userID int, orderID string) error {
 	var orderOut string
 
 	sql, args, err := ps.psql.
@@ -71,7 +85,7 @@ func (ps *PersistStorage) CheckUserOrderNonExist(ctx context.Context, userID int
 	return domain.ErrOrderExist
 }
 
-func (ps *PersistStorage) CheckOrderNonExist(ctx context.Context, orderID string) error {
+func (ps *Orders) CheckOrderNonExist(ctx context.Context, orderID string) error {
 	var orderOut string
 
 	sql, args, err := ps.psql.
@@ -95,7 +109,7 @@ func (ps *PersistStorage) CheckOrderNonExist(ctx context.Context, orderID string
 	return domain.ErrOrderExistWrongUser
 }
 
-func (ps *PersistStorage) GetUserOrders(ctx context.Context, userID int) (dto.OrdersDesc, error) {
+func (ps *Orders) GetUserOrders(ctx context.Context, userID int) (dto.OrdersDesc, error) {
 	sql, args, err := ps.psql.
 		Select("id", "status", "accural", "uploaded_at").
 		From("orders").
@@ -130,7 +144,7 @@ func (ps *PersistStorage) GetUserOrders(ctx context.Context, userID int) (dto.Or
 	return orders, nil
 }
 
-func (ps *PersistStorage) GetUserOrdersWithdrawn(ctx context.Context, userID int) (dto.Withdrawns, error) {
+func (ps *Orders) GetUserOrdersWithdrawn(ctx context.Context, userID int) (dto.Withdrawns, error) {
 	sql, args, err := ps.psql.
 		Select("order_id", "sum", "uploaded_at").
 		From("withdraw_orders").

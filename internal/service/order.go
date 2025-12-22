@@ -12,10 +12,10 @@ import (
 )
 
 func (s *Service) CheckUserOrderDubl(ctx context.Context, userID int, order string) error {
-	if err := s.storage.CheckUserOrderNonExist(ctx, userID, order); err != nil {
+	if err := s.orders.CheckUserOrderNonExist(ctx, userID, order); err != nil {
 		return err
 	}
-	if err := s.storage.CheckOrderNonExist(ctx, order); err != nil {
+	if err := s.orders.CheckOrderNonExist(ctx, order); err != nil {
 		return err
 	}
 	return nil
@@ -42,7 +42,7 @@ func (s *Service) PostUserOrder(ctx context.Context, username string, order stri
 	} else {
 		status = "NEW"
 	}
-	id, err := s.storage.GetUserID(ctx, username)
+	id, err := s.auth.GetUserID(ctx, username)
 	if err != nil {
 		return err
 	}
@@ -53,11 +53,11 @@ func (s *Service) PostUserOrder(ctx context.Context, username string, order stri
 		return err
 	}
 
-	if err := s.storage.InsertNewUserOrder(ctx, order, id, status, accrual); err != nil {
+	if err := s.orders.InsertNewUserOrder(ctx, order, id, status, accrual); err != nil {
 		return err
 	}
 	if accrual != 0 && status == "PROCESSED" {
-		if err := s.storage.UpdateUserBalance(ctx, id, accrual); err != nil {
+		if err := s.balance.UpdateUserBalance(ctx, id, accrual); err != nil {
 			return err
 		}
 	}
@@ -79,11 +79,11 @@ func (s *Service) CheckOrderByLuna(ctx context.Context, order string) (bool, err
 }
 
 func (s *Service) GetUserOrders(ctx context.Context, username string) (dto.OrdersDesc, error) {
-	id, err := s.storage.GetUserID(ctx, username)
+	id, err := s.auth.GetUserID(ctx, username)
 	if err != nil {
 		return dto.OrdersDesc{}, err
 	}
-	orders, err := s.storage.GetUserOrders(ctx, id)
+	orders, err := s.orders.GetUserOrders(ctx, id)
 	if err != nil {
 		return dto.OrdersDesc{}, err
 	}
@@ -92,11 +92,11 @@ func (s *Service) GetUserOrders(ctx context.Context, username string) (dto.Order
 
 func (s *Service) GetUserWithdrawals(ctx context.Context, username string) (*dto.Withdrawns, error) {
 	var orders dto.Withdrawns
-	id, err := s.storage.GetUserID(ctx, username)
+	id, err := s.auth.GetUserID(ctx, username)
 	if err != nil {
 		return &orders, err
 	}
-	orders, err = s.storage.GetUserOrdersWithdrawn(ctx, id)
+	orders, err = s.orders.GetUserOrdersWithdrawn(ctx, id)
 	if err != nil {
 		return &orders, err
 	}
