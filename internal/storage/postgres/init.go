@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	domain "github.com/Eanhain/gofermart/internal/domain"
+	sq "github.com/Masterminds/squirrel"
 	pgx "github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	pgxpool "github.com/jackc/pgx/v5/pgxpool"
@@ -60,7 +61,8 @@ type DMLUserStruct struct {
 
 type PersistStorage struct {
 	PgxIface
-	log domain.Logger
+	log  domain.Logger
+	psql sq.StatementBuilderType
 }
 
 // TODO Migration
@@ -72,7 +74,9 @@ func InitialPersistStorage(ctx context.Context, log domain.Logger, connString st
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect db %w", err)
 	}
-	PersistStorageInstance := &PersistStorage{pgxPool, log}
+	psql := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
+
+	PersistStorageInstance := &PersistStorage{pgxPool, log, psql}
 	return PersistStorageInstance, nil
 }
 
