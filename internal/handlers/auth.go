@@ -62,10 +62,9 @@ func (r *app) HandlerRegUser(c *fiber.Ctx) error {
 			return fiber.ErrInternalServerError
 		}
 	}
-	r.service.AuthUser(c.Context(), user)
 	if ok, err := r.service.AuthUser(c.Context(), user); err != nil || !ok {
 		r.logger.Warnln("Can't auth user: ", err)
-		return fiber.ErrBadRequest
+		return fiber.ErrInternalServerError
 	}
 
 	tokenJWT, err := r.CreateJWT(user.Login)
