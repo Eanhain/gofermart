@@ -12,7 +12,7 @@ import (
 )
 
 func (s *Service) AuthUser(ctx context.Context, user dto.UserInput) (bool, error) {
-	tUser, err := s.c.CheckUser(ctx, user)
+	tUser, err := s.storage.CheckUser(ctx, user)
 	if err != nil {
 		return false, err
 	}
@@ -23,18 +23,18 @@ func (s *Service) AuthUser(ctx context.Context, user dto.UserInput) (bool, error
 func (s *Service) RegUser(ctx context.Context, user dto.UserInput) error {
 	var pgErr *pgconn.PgError
 	hashedUser := hash.CreateUserHash(s.log, user)
-	err := s.c.RegisterUser(ctx, hashedUser)
+	err := s.storage.RegisterUser(ctx, hashedUser)
 
 	if errors.As(err, &pgErr) && pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
 		err = domain.ErrConflict
 		return err
 	}
-	id, err := s.c.GetUserID(ctx, user.Login)
+	id, err := s.storage.GetUserID(ctx, user.Login)
 	if err != nil {
 		return err
 	}
 
-	s.c.InsertNewUserBalance(ctx, id, 0)
+	s.storage.InsertNewUserBalance(ctx, id, 0)
 
 	return err
 }

@@ -8,11 +8,11 @@ import (
 )
 
 func (s *Service) GetUserBalance(ctx context.Context, username string) (dto.Amount, error) {
-	id, err := s.c.GetUserID(ctx, username)
+	id, err := s.storage.GetUserID(ctx, username)
 	if err != nil {
 		return dto.Amount{}, err
 	}
-	balance, err := s.c.GetUserBalance(ctx, id)
+	balance, err := s.storage.GetUserBalance(ctx, id)
 	if err != nil {
 		return dto.Amount{}, err
 	}
@@ -21,7 +21,7 @@ func (s *Service) GetUserBalance(ctx context.Context, username string) (dto.Amou
 
 func (s *Service) PostUserWithdrawOrder(ctx context.Context, username string, order dto.Withdrawn) error {
 
-	userID, err := s.c.GetUserID(ctx, username)
+	userID, err := s.storage.GetUserID(ctx, username)
 	if err != nil {
 		return err
 	}
@@ -32,25 +32,25 @@ func (s *Service) PostUserWithdrawOrder(ctx context.Context, username string, or
 		return err
 	}
 
-	if err := s.c.InsertNewUserOrder(ctx, order.Order, userID, "NEW", 0); err != nil {
+	if err := s.storage.InsertNewUserOrder(ctx, order.Order, userID, "NEW", 0); err != nil {
 		return err
 	}
-	amount, err := s.c.GetUserBalance(ctx, userID)
+	amount, err := s.storage.GetUserBalance(ctx, userID)
 	if err != nil {
 		return err
 	}
 	if amount.Current < order.Sum {
 		return domain.ErrBalanceWithdrawn
 	}
-	if err := s.c.UpdateUserBalance(ctx, userID, order.Sum*-1); err != nil {
+	if err := s.storage.UpdateUserBalance(ctx, userID, order.Sum*-1); err != nil {
 		s.log.Warnln("can't update user balance", username, amount, order)
 		return err
 	}
-	if err := s.c.UpdateUserWithdrawn(ctx, userID, order.Sum); err != nil {
+	if err := s.storage.UpdateUserWithdrawn(ctx, userID, order.Sum); err != nil {
 		s.log.Warnln("can't update user withdrawn", username, amount, order)
 		return err
 	}
-	if err := s.c.InsertOrderWithdrawn(ctx, userID, order); err != nil {
+	if err := s.storage.InsertOrderWithdrawn(ctx, userID, order); err != nil {
 		s.log.Warnln("can't insert user withdrawn", username, amount, order)
 		return err
 	}
