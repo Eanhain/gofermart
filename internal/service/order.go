@@ -90,17 +90,18 @@ func (s *Service) GetUserOrders(ctx context.Context, username string) (dto.Order
 	return orders, nil
 }
 
-func (s *Service) GetUserWithdrawals(ctx context.Context, username string) (dto.Withdrawns, error) {
+func (s *Service) GetUserWithdrawals(ctx context.Context, username string) (*dto.Withdrawns, error) {
+	var orders dto.Withdrawns
 	id, err := s.c.GetUserID(ctx, username)
 	if err != nil {
-		return dto.Withdrawns{}, err
+		return &orders, err
 	}
-	orders, err := s.c.GetUserOrdersWithdrawn(ctx, id)
+	orders, err = s.c.GetUserOrdersWithdrawn(ctx, id)
 	if err != nil {
-		return dto.Withdrawns{}, err
+		return &orders, err
 	}
 	if len(orders) == 0 {
-		return dto.Withdrawns{}, domain.ErrEmptyOrdersList
+		return &orders, domain.ErrEmptyOrdersList
 	}
-	return orders, nil
+	return &orders, nil
 }
