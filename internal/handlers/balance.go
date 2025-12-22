@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"errors"
 
 	dto "github.com/Eanhain/gofermart/internal/api"
@@ -14,7 +13,7 @@ func (r *app) HandlerGetUserBalance(c *fiber.Ctx) error {
 	user := c.Locals("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 	username := claims["login"].(string)
-	orders, err := r.service.GetUserBalance(context.TODO(), username)
+	orders, err := r.service.GetUserBalance(c.Context(), username)
 	if err != nil {
 		r.logger.Warnln("Can't get balance", err)
 		return err
@@ -36,7 +35,7 @@ func (r *app) HandlersUserBalanceWithdraw(c *fiber.Ctx) error {
 		r.logger.Warnln("can't parse json withdrawn order")
 		return err
 	}
-	err := r.service.PostUserWithdrawOrder(context.TODO(), username, balance)
+	err := r.service.PostUserWithdrawOrder(c.Context(), username, balance)
 	if errors.Is(err, domain.ErrBalanceWithdrawn) {
 		return fiber.ErrPaymentRequired
 	} else if errors.Is(err, domain.ErrOrderInvalid) {

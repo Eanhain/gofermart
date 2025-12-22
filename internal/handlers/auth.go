@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -63,7 +62,7 @@ func (r *app) HandlerRegUser(c *fiber.Ctx) error {
 			return fiber.ErrInternalServerError
 		}
 	}
-	r.service.AuthUser(context.TODO(), user)
+	r.service.AuthUser(c.Context(), user)
 	if ok, err := r.service.AuthUser(c.Context(), user); err != nil || !ok {
 		r.logger.Warnln("Can't auth user: ", err)
 		return fiber.ErrBadRequest
