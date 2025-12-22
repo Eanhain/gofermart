@@ -33,6 +33,7 @@ func (s *Service) RegUser(ctx context.Context, user dto.UserInput) error {
 	if err != nil {
 		return err
 	}
+
 	s.c.InsertNewUserBalance(ctx, id, 0)
 
 	return err
